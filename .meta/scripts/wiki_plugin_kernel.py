@@ -1075,7 +1075,7 @@ def do_install(spec, args):
         return 1
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__",
-                                                            *[f"{m}/" for m in pruned]))
+                                                            *sorted(pruned)))
     copied_conn, copied_cmd = [], []
     csrc = os.path.join(src, "connectors")
     if os.path.isdir(csrc):
@@ -1089,7 +1089,13 @@ def do_install(spec, args):
             copied_conn.append(d)
     msrc = os.path.join(src, "command")
     if os.path.isdir(msrc):
+        import wikilib
         for d in sorted(os.listdir(msrc)):
+            fm_path = os.path.join(msrc, d, "SKILL.md")
+            if os.path.exists(fm_path):
+                owners = _owner_list(wikilib.parse_frontmatter(open(fm_path, encoding="utf-8").read()).get("owner"))
+                if owners and owners[0] in pruned:
+                    continue  # command of a pruned member rides out with it
             dd = os.path.join(COMMANDS_DIR, d)
             if os.path.exists(dd):
                 print(f"[warning] command {d} already present — kept existing")
