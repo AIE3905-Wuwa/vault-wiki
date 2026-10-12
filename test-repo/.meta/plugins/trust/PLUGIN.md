@@ -27,8 +27,8 @@ verified:
   - "by: human:Joss, at: 2026-09-12"
 stale_after: 2026-12-31
 sources:
-  - id: 雾港设计备忘
-    resource: vault/雾港/设计备忘.md
+  - id: fog-harbor-design-memo
+    resource: vault/fog-harbor/design-memo.md
     author: human:Joss
     usage_count: 3
     last_modified: 2026-09-05
