@@ -12,7 +12,7 @@ Dev rules of the vault-wiki framework. The framework repo is a library: no insta
 
 1. Branch off latest master, name it `module/topic` (e.g. `feature/bb-notes`, `kernel/pkg-reconcile`)
 2. Small commits, one thing each, message format `模块: 概述`
-3. Before opening the PR, self-check: `python .meta/scripts/wiki_plugin_kernel.py all` must pass completely; the diff contains development artifacts only
+3. Before opening the PR, self-check: at the framework root `python .meta/scripts/wiki_plugin_kernel.py validate` (plus `pkg` when package manifests changed) must pass; the full mechanical run lives in the sandbox — `cd test-repo && python .meta/scripts/wiki_plugin_kernel.py all` (the framework repo itself carries no AGENTS.md — library posture; the sandbox is the verified instance). The diff contains development artifacts only
 4. Push the branch, open a PR against master — the standard review channel
 5. Kernel/charter PRs: owner reviews. Content/domain PRs: peer review among members
 6. After merge the head branch is deleted automatically; every merge is recorded (PR + commit trail)

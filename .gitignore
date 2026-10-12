@@ -4,11 +4,9 @@ __pycache__/
 .meta/smoke-tmp/
 connectors/*/.venv/
 connectors/*/*.egg-info/
-# bb/ 拉取物仓储 = 实例数据，不入框架仓库（仅保留空种子 .gitkeep；ai 产物——teach 笔记/quiz 考卷落 notes/ 随此忽略）
-/bb/*
-!/bb/.gitkeep
 # test-repo：沙箱白名单式追踪（2026-10-04 所有者裁定，回滚整体出跟踪）——仅 .meta/ 与 .agents/ 框架镜像入 git，实验内容（含虚构示例与真实数据）只在本地
 test-repo/*
+!test-repo/AGENTS.md
 !test-repo/.meta/
 !test-repo/.agents/
 # agent 工具本地产物（ZCode 自管，不入库）

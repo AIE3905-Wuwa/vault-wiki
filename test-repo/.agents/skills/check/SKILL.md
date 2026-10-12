@@ -102,22 +102,10 @@ grep / file reading suffice; no second scan when one read is enough (call frugal
 - Semantic (attached audit deferred): per-form drift between readable execution-side lists (scheduler / system tasks / conditional-executor watches, best-effort) and the declaration page set → warning; unreadable executor → info
 <!-- /check:cron -->
 
-<!-- check:cuhksz -->
-- Semantic items (v0.1 manual, attached audit deferred): a type: cuhksz page outside wiki/cuhksz/ → error; identity.md missing the sis block mapping or student_id → error
-<!-- /check:cuhksz -->
-
 <!-- check:index -->
 - Deviation between indexes and the actual page set (including merged-back indexes pending deletion) → fixed by running `pipeline.py index` to rebuild (idempotent; no diff means consistent); same for tags (`pipeline.py tags`)
 - Traces of hand editing → warning
 <!-- /check:index -->
-
-<!-- check:lark -->
-- Semantic items (v0.1 manual, attached audit deferred): pointer page missing token / duplicate token → error; lark.profile not matching the containing directory name → warning; type: lark outside wiki/lark/ → error; domain hub page (docs.md etc.) outside a profile directory → warning
-<!-- /check:lark -->
-
-<!-- check:project -->
-- Semantic items (v0.1 manual, attached audit deferred): type: project outside `wiki/projects.md` → error; a declared key with no directory / an undeclared directory → warning (bidirectional diff); an in-progress project's self-description updated over 30 days ago → warning (stall triage)
-<!-- /check:project -->
 
 <!-- check:todo -->
 - Mechanical (info-level): the list of date-triggered, overdue and unsettled entries (the mechanical basis for new-session reminders); page absent (the no-delegation norm)
@@ -131,60 +119,12 @@ grep / file reading suffice; no second scan when one read is enough (call frugal
 - Mechanical (info-level): profile page absent (the untriggered norm; profile self-creates on first trigger)
 <!-- /check:user-profile -->
 
-<!-- check:bb -->
-- Semantic items (v0.1 manual, attached audit deferred): a type: bb page outside wiki/cuhksz/bb/ → error; identity-page bb block mapping missing course_id or not matching the directory → error; manual-edit traces on the digest page → warning; stale list (info level)
-<!-- /check:bb -->
-
-<!-- check:bili -->
-- Semantic items (v0.1 manual, attached audit deferred): a type: bili page outside wiki/bili/ → error; duplicate UP-archive mid or video-archive bvid, or mismatching the page's declarations → error; manual-edit traces on the digest page → warning; stale list (info level: pull date + TTL)
-<!-- /check:bili -->
-
-<!-- check:email -->
-- Semantic items (v0.1 manual, attached audit deferred): a type: email page outside `wiki/email/` → error; duplicate person-archive token (address) → error; a thread archive's mechanical section missing members (Message-ID list) → warning; manual-edit traces on the digest → warning; stale list (info level: pull date + TTL)
-<!-- /check:email -->
-
-<!-- check:lark-calendar -->
-- Semantic items (v0.1 manual): a declaration-page lark source's profile not among the wiki/lark/ directory set → warning; a schedule line's source key with no matching declaration → warning
-<!-- /check:lark-calendar -->
-
-<!-- check:lark-docs -->
-- Semantic items (v0.1 manual, attached audit deferred): `docs.md` missing the `docs` block mapping → warning; pointer page outside the `docs/` subtree → warning; kind not in the vocabulary → info
-<!-- /check:lark-docs -->
-
-<!-- check:lark-im -->
-- Semantic items (v0.1 manual, attached audit deferred): group archive / person archive missing token → error; kind outside chat|person → error; a type: lark page outside im/ claiming this domain → warning; blank accumulation section on a person archive → info (normal at skeleton stage); traces of rewriting in a body accumulation section → error (git audit)
-<!-- /check:lark-im -->
-
 <!-- check:mapping -->
 - Mechanical items (attached-audit script `scripts/check.py`, executed on audit discovery): mirror diff (file in vault without proxy → info backlog; proxy without counterpart → error, message carries the reference count — see the impact surface before deleting); missing registration fields (raw_file / raw_sha256) → error; dangling raw_file → error; raw_sha256 mismatch → warning; suspected full-text duplication (md asset body ≥80% of the original) → warning; description-less stub with updated older than 90 days → warning
 - Semantic items (check command): mismatch-disposition triage (description still applies → mechanical recalculation auto-repairs, writing a log line on completion (type map, one sentence with the asset name and 'original changed, description still applies'); suspected invalid → human decides remap or delete); diary-type full-text duplication exemption judgment; before disposing an orphan proxy, handle its references first (update references in sync or leave aliases to redirect)
 <!-- /check:mapping -->
 
-<!-- check:registry -->
-- Semantic items (v0.1 manual, attached audit deferred): a proxy page missing raw_file/raw_sha256 → error; a broken index-page pointer URL on spot-check → warning; a materialization-zone file with no proxy page → warning
-<!-- /check:registry -->
-
-<!-- check:sis -->
-- Semantic items (v0.1 manual, attached audit deferred): a type: sis page outside wiki/cuhksz/sis/ → error; manual-edit traces on the digest page → warning; stale list (info level)
-<!-- /check:sis -->
-
 <!-- check:structure -->
 - Mechanical items (attached-audit script `scripts/check.py`, executed on audit discovery): declaration diff — vault top-level directory undeclared → warning, declaration key pointing to a nonexistent directory → warning; type: structure landing outside `wiki/structure.md` → error; declaration page absent → info (flat tolerance)
 <!-- /check:structure -->
-
-<!-- check:bb-map -->
-- Semantic items (v0.1 manual, attached audit deferred): a territory page outside the four buckets → error (except the course-root user.md — a bb-track domain-native page); a knowledge-point page's raw_path dangling → error (absence is legitimate — an undownloaded unit marked in the list is itself a record); info.md missing the bb block mapping (term_id/course_id/term_status) or not matching the directory → error; an attachments proxy's raw_file pointing at a nonexistent bb/ file → error; an assessments page missing the raw block mapping or column_id → warning; a page created for a summary column (Weighted Total/Total) → warning; a knowledge-point page missing `## Knowledge Point Summary` or summary items missing sm-N anchors → warning; a knowledge-point summary lumping multiple distinct concepts into one sm-N anchor → warning; a knowledge-point page missing `## Terminology` → info; an info distillation section missing course-policy key points → info; assessments having a requirement source but an undistilled requirements section → info; a vanished source file not marked deprecated → warning; an accumulation region (notes/review) rewritten by a rebuild → error; mapping completeness (a bb/ content unit with no corresponding page) → info
-<!-- /check:bb-map -->
-
-<!-- check:bb-track -->
-- Semantic items (v0.1 manual, attached audit deferred): user.md outside the course root or inside the four buckets → error; an evidence-stream entry rewritten or deleted → error; a reading entry without traceable evidence → warning; a reading based only on origin: ai without review → warning; a tier rise to proficient/mastered citing no retrieval-type evidence → warning; a persisted schedule or statistic (computed-view output landed into user.md) → error; a divergence facet still standing after contradicting retrieval evidence → info; consuming stale beyond the window without verification → info; note attribute values outside the open vocabulary → info
-<!-- /check:bb-track -->
-
-<!-- check:bb-quiz -->
-- Semantic items (v0.1 manual, attached audit deferred): a paper landed outside notes/testing/ → error; overwriting or deleting an existing paper → error; stems/explanations citing knowledge points outside the scope or the course → warning (semantic judgment); an explanation missing its sm-N knowledge-point mark → warning; the quiz block mapping missing course or scope → warning; answers/explanations appearing on the questions page → warning; writing user.md after grading without confirmation → error; grading missing per-question correctness → warning
-<!-- /check:bb-quiz -->
-
-<!-- check:bb-teach -->
-- Semantic items (v0.1 manual, attached audit deferred): explaining without reading user.md → warning; lecturing at a familiar-and-above point with no retrieval probe offered first → warning; a misconception-flagged point explained by mere restatement without the refutation structure → warning; the direct answer given on a problem-type ask before the ladder top (or absent explicit user override) → warning; a graded final answer dumped without an alternative offered → error; generic praise ('good job') with no specific content → info; unconditional agreement with a wrong user claim → error; a correct user answer marked wrong without source-anchored evidence → error; a term beyond the anchored set left unexplained on the spot → warning; a hardcore concept explained without the full worked-example structure → warning; a theorem/algorithm explained without the formula + parameter annotations → info; long lectures at the 'mastered' tier → info; writing user.md without confirmation → error; a single 'got it' written as 'mastered' into user.md → error; a tier rise to proficient/mastered proposed without retrieval-type evidence → warning; an explanation missing courseware anchor backlinks → info; ai notes landed outside notes/ → error; ai notes missing origin: ai or anchor backlinks → warning; overwriting an existing ai note → error
-<!-- /check:bb-teach -->
 <!-- check-inject:end -->

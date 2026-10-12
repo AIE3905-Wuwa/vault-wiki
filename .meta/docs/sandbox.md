@@ -4,7 +4,7 @@
 
 ## What it is
 
-test-repo is a deployment instance living inside the development repository. The two framework trees—`.meta/` and `.agents/`—enter git as a whitelisted mirror, re-copied wholesale when a root-side batch closes; everything else is the sandbox's own data zone, local only and never committed. The inside of the sandbox is unaware of this project: a session opened at the sandbox root reads the sandbox's own AGENTS.md and skills.
+test-repo is a deployment instance living inside the development repository. The framework trees—`.meta/` and `.agents/`—plus the `AGENTS.md` seed enter git as a whitelisted mirror (core-only after the split; packages install on demand), re-copied wholesale when a root-side batch closes; everything else is the sandbox's own data zone, local only and never committed. The inside of the sandbox is unaware of this project: a session opened at the sandbox root reads the sandbox's own AGENTS.md and skills.
 
 ## Enabling it
 

@@ -1,7 +1,0 @@
-#!/usr/bin/env python3
-"""mail-cli thin entry shell: install-free, package sits in the sibling mailcli/ directory."""
-import os, sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mailcli.cli import main
-
-if __name__ == "__main__": main()
