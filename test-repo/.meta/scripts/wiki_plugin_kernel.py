@@ -882,7 +882,7 @@ def do_residual(pkg_id, pkgs):
 # ---------- process round: install / uninstall / list-remote / upgrade (issue #20 流程轮) ----------
 
 INDEX_FILENAME = "INDEX.yaml"
-INDEX_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/vault-wiki/master/INDEX.yaml"
+INDEX_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/registry/master/INDEX.yaml"
 
 
 def load_index(errors, quiet=False):
@@ -920,8 +920,9 @@ def _clone_package(entry, pkg, tag, errors):
         errors.append(f"[error] index entry {pkg} has no repo")
         return None
     tmp = tempfile.mkdtemp(prefix="vw-pkg-")
-    ref = tag or f"{pkg}-v{entry.get('version')}"
-    r = subprocess.run(["git", "clone", "--quiet", "--depth", "1", "--branch", ref, url, tmp],
+    ref = tag or (f"{pkg}-v{entry.get('version')}" if entry.get("version") else None)
+    cmd = ["git", "clone", "--quiet", "--depth", "1"] + (["--branch", ref] if ref else []) + [url, tmp]
+    r = subprocess.run(cmd,
                        capture_output=True, text=True)
     if r.returncode != 0:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -966,6 +967,7 @@ def do_install(spec, args):
     if not pkg and not path:
         print(__doc__)
         return 2
+    direct = pkg.startswith(("https://", "git@")) or ("/" in pkg and not path)
     # framework repo guard: library posture — the sandbox (test-repo) is the install target
     if os.path.isdir(os.path.join(ROOT, "test-repo")) and not os.path.exists(AGENTS_MD):
         print("[error] framework repo is library posture — install into an instance (e.g. cd test-repo)")
@@ -976,6 +978,19 @@ def do_install(spec, args):
         if not os.path.exists(os.path.join(src, "PKG.yaml")):
             print(f"[error] {src}/PKG.yaml not found (not a package directory)")
             return 1
+    elif direct:
+        # unindexed repository: reachable by convention, trust unknown — the index PR is the review gate (#20 / #12)
+        if "--yes" not in args:
+            print(f"[error] direct install of {pkg!r} (not in the index) requires --yes — trust: unknown; the registry PR is how a package earns reviewed trust")
+            return 1
+        url = pkg if pkg.startswith(("https://", "git@")) else f"https://github.com/{pkg}.git"
+        entry = {"repo": url}
+        src = _clone_package(entry, pkg, tag or None, errors)
+        for e in errors:
+            print(e)
+        if src is None:
+            return 1
+        print(f"[install] trust: unknown (unindexed direct install)")
     else:
         index, _src = load_index(errors)
         if pkg not in index:
@@ -998,7 +1013,7 @@ def do_install(spec, args):
         print(f"[error] PKG.yaml: {e}")
         return 1
     pid = str(pkgm.get("id") or pkg or os.path.basename(path))
-    if not path and pid != pkg:
+    if not path and not direct and pid != pkg:
         print(f"[error] index says {pkg}, PKG.yaml says {pid} (index ↔ package mismatch — refuse)")
         return 1
     fw = framework_version()
@@ -1006,6 +1021,12 @@ def do_install(spec, args):
         m = re.fullmatch(r">=\s*(\d+)\.(\d+)", str(pkgm.get("compat") or ""))
         if m and (int(m.group(1)), int(m.group(2))) > fw:
             print(f"[error] package compat {pkgm.get('compat')} exceeds framework {'.'.join(map(str, fw))}")
+            return 1
+    if not path and not direct:
+        idx_members = set(str(entry.get("members", "")).split("/")) - {""}
+        pkg_members = set(pkgm.get("members") or [])
+        if idx_members and idx_members != pkg_members:
+            print(f"[error] index members {sorted(idx_members)} != PKG.yaml members {sorted(pkg_members)} (index <-> package drift — refuse)")
             return 1
     dst = os.path.join(PLUGINS_DIR, "domains", pid)
     if os.path.exists(dst):
@@ -1111,7 +1132,9 @@ def do_list_remote():
     for name, e in sorted(index.items()):
         mark = "installed" if name in installed else "available"
         print(f"  {name:<10} v{e.get('version', '?'):<5} compat {e.get('compat', '?'):<8} [{mark}] {e.get('summary', '')}")
-        print(f"  {'':<10} {e.get('repo', '')}  trust: {e.get('trust', '?')}")
+        mem = str(e.get("members", "")).replace("/", ", ")
+        print(f"  {'':<12}members: {mem if mem else '?'}")
+        print(f"  {'':<12}{e.get('repo', '')}  trust: {e.get('trust', '?')}")
     for e in errors:
         print(e)
     return 0 if index else 1

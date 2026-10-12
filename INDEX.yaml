@@ -1,8 +1,0 @@
-# vault-wiki package index — what `kernel install/list-remote` resolve against (issue #20)
-# trust: framework-bundled (built & reviewed in-org via the normal PR flow) / reviewed-3rd-party (an index PR is the human-review gate)
-packages:
-  cuhksz: {repo: https://github.com/AIE3905-Wuwa/pkg-cuhksz, version: 0.1, compat: ">= 0.2", trust: framework-bundled, summary: CUHK-SZ school domain — bb course ops · sis records · registry}
-  lark:   {repo: https://github.com/AIE3905-Wuwa/pkg-lark,   version: 0.1, compat: ">= 0.2", trust: framework-bundled, summary: Feishu/Lark domain — docs · im · calendar}
-  email:  {repo: https://github.com/AIE3905-Wuwa/pkg-email,  version: 0.1, compat: ">= 0.2", trust: framework-bundled, summary: personal mailbox domain — mail-cli}
-  bili:   {repo: https://github.com/AIE3905-Wuwa/pkg-bili,   version: 0.1, compat: ">= 0.2", trust: framework-bundled, summary: bilibili content domain — bili-cli}
-  project:{repo: https://github.com/AIE3905-Wuwa/pkg-project, version: 0.1, compat: ">= 0.2", trust: framework-bundled, summary: project container domain}
