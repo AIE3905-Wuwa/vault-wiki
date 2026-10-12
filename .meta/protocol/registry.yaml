@@ -71,6 +71,9 @@ plugins:
   device:
     device:
       note: block mapping (device profile page in notes) — serial (serial number) / purchased (purchase date YYYY-MM-DD) / warranty_until (warranty or coverage end date YYYY-MM-DD, the attached-audit scan item), a three-key minimal set; remaining keys open (model, vendor, etc.; the architecture does not enumerate)
+  domain-github:
+    github:
+      note: block mapping — host / account / channel / kind / identity / observed_at / expires_at; identity is the immutable GitHub numeric id, channel identifies the observation method, timestamps are UTC ISO 8601
   email:
     email:
       note: block mapping — account (owning account, = the containing directory name) / kind (page form: account identity page / thread thread archive / source source archive / person person archive, open vocabulary) / token (identity proof: person archive = email address, single item = Message-ID one-to-one, thread archive = members list) / url (webmail or message:// deep link)

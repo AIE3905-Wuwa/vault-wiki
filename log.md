@@ -75,3 +75,5 @@ Framework build (done 09-08~12) → daily use & fix-as-used (**current**).
 - 2026-08-26~09-13 个人期奠基（细则见 git 史）：创始副本起建旋即重定位 vault-wiki → 原型落地（六插件四命令、registry/actions、装卸内核、trust）→ 定位重构（以用代验、SASU-L、零污染）→ 收束定形（user-profile、「开发框架非跑库」裁定、quickstart/三投影）
 
 > 2026-10-04 多度整合（负责人同意）。
+
+- 2026-10-12 plugin: domain-github v0.1 and github-state command added (36 plugins / 14 commands); gh identity, membership, runtime and explicit repo snapshots with offline reads, expiry, principal isolation, human-note preservation and failure retention; connector channel contract disclosed separately; local real-use validation passed, no instance data committed.

@@ -106,6 +106,10 @@ grep / file reading suffice; no second scan when one read is enough (call frugal
 - Semantic items (v0.1 manual, attached audit deferred): a type: cuhksz page outside wiki/cuhksz/ → error; identity.md missing the sis block mapping or student_id → error
 <!-- /check:cuhksz -->
 
+<!-- check:domain-github -->
+- Mechanical: github envelope outside wiki/github, missing identity/channel, path mismatch, invalid timestamps or expiry before observation are errors; expired snapshots are informational. Semantic: credential material, channel conflation, cached permission used to authorize a write or treating failed discovery as absence are errors.
+<!-- /check:domain-github -->
+
 <!-- check:index -->
 - Deviation between indexes and the actual page set (including merged-back indexes pending deletion) → fixed by running `pipeline.py index` to rebuild (idempotent; no diff means consistent); same for tags (`pipeline.py tags`)
 - Traces of hand editing → warning

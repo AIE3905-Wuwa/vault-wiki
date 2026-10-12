@@ -1,0 +1,26 @@
+id: domain-github
+version: 0.1
+depends:
+  - domain
+  - wiki
+  - trust
+  - log
+updated: 2026-10-12
+commands:
+  - github-state
+attachment:
+  - "wiki/github/<host>/<account>/ — channel-qualified account, organization-membership and explicitly selected repository snapshots; no credentials or repository contents"
+  - "scripts/state.py — gh read-only collection and offline cache reader"
+  - "scripts/check.py — local snapshot audit"
+fields:
+  github: "block mapping — host / account / channel / kind / identity / observed_at / expires_at; identity is the immutable GitHub numeric id, channel identifies the observation method, timestamps are UTC ISO 8601"
+inject: "GitHub cache wiki/github/<host>/<account>/; github-state skill. Read cache first; gh/connector separate. No credentials. TTL is historical context; verify identity/permission live before writes."
+usage:
+  - "Cache-first: resolve the requested host/account/channel, read its page before discovery; an absent page is unknown, not disconnected. Fresh cache answers descriptive questions without network; report observation time. Explicit current-state requests and expired facts refresh only the needed scope."
+  - "Channel isolation: gh snapshots use gh-account.md and repos/<owner>/<repo>.gh.md; connector-account.md and repos/<owner>/<repo>.connector.md are reserved for agent-recorded connector observations with the same envelope. Never infer connector access from gh or infer non-membership from an empty connector listing; state the observed scope and retain unknowns."
+  - "Envelope and payload: type source plus github block host/account/channel/kind/identity/observed_at/expires_at, generated and stale_after; Snapshot JSON is an allowlisted factual observation, Notes is human-owned and preserved. Account payload includes login/id, membership role/state and local gh path/version/machine. Repo payload includes id/full_name/default_branch/visibility/archived/fork/parent and nullable pull/push/triage/maintain/admin permissions."
+  - "Freshness: expires_at is the exact UTC deadline (default 24 hours, configurable when refreshing); stale_after is its calendar-date projection for shared audits. Authentication is only successful-at-observation-time. Offline reads never run gh. Remote mutations always require live identity and relevant permission verification in addition to user authorization, even with fresh cache."
+  - "Refresh: use official gh, explicit host/account and optional repeated --repo owner/name; fetch all requested API results before changing pages, abort on account/id mismatch, timeout, malformed results or failed access. Preserve prior files and their timestamps on collection failure; failures mean unknown, never deletion or revoked access. No automatic login, account switch, token extraction, write API, whole-org crawl or polling."
+  - "Projection writes: replace the machine snapshot, preserve Notes verbatim; reject malformed existing pages rather than clobber them. Account switches create separate paths. Missing resources remain historical until a deliberate reconciliation. After refresh, run index/tags/hot/log (other --domain domain-github) and verify; state.py performs these calls. Real account data belongs only to deployment instances or ignored local sandbox pages."
+checks:
+  - "Mechanical: github envelope outside wiki/github, missing identity/channel, path mismatch, invalid timestamps or expiry before observation are errors; expired snapshots are informational. Semantic: credential material, channel conflation, cached permission used to authorize a write or treating failed discovery as absence are errors."
