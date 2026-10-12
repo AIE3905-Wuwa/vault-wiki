@@ -226,6 +226,7 @@ def load_plugins():
         except ValueError as e:
             errors.append(f"[error] {name}/PLUGIN.yaml: {e}")
             continue
+        m["_dir"] = pdir  # private: layout-aware path anchor (attached-audit contract etc.)
         plugins[name] = m
     return plugins, errors
 
@@ -263,8 +264,9 @@ def build_inject_blocks(plugins):
     return blocks, exited
 
 
-def validate(plugins, errors):
-    """Compliance and dependency checks; errors are appended to errors."""
+def validate(plugins, errors, scope=None, warnings=None):
+    """Compliance and dependency checks; errors are appended to errors (scope set → single-package tolerant mode, #20 D3)."""
+    warnings = [] if warnings is None else warnings
     for name, m in sorted(plugins.items()):
         for k in REQUIRED_KEYS:
             if k not in m:
@@ -287,7 +289,7 @@ def validate(plugins, errors):
         if isinstance(m.get("inject"), str) and (m["inject"].startswith('"') or m["inject"].endswith('"')):
             print(f"[warning] {name}/: inject value carries a stray quote (unbalanced quoting — parse artifact or manifest typo)")
         # attached-audit contract (optional): if scripts/check.py exists it must define check(ctx) — checked statically via AST, not executed
-        cpath = os.path.join(PLUGINS_DIR, name, "scripts", "check.py")
+        cpath = os.path.join(m.get("_dir", os.path.join(PLUGINS_DIR, name)), "scripts", "check.py")
         if os.path.exists(cpath):
             try:
                 tree = ast.parse(open(cpath, encoding="utf-8").read())
@@ -302,7 +304,11 @@ def validate(plugins, errors):
              if reaches_domain(plugins, p) and plugins[p].get("inject_tier") != "member"]
     for name, m in sorted(plugins.items()):
         if m.get("inject_tier") == "member" and not any(reaches_plugin(plugins, name, r) for r in roots):
-            errors.append(f"[error] {name}/: inject_tier member must reach a full-tier domain root through depends")
+            msg = f"{name}/: inject_tier member must reach a full-tier domain root through depends"
+            if scope:
+                warnings.append(f"{msg} — family root may live outside package {scope} (single-package mode)")
+            else:
+                errors.append(f"[error] {msg}")
     # injection budget (hard since the issue #12 tier migration landed): over-budget blocks mechanical actions
     blocks, _ = build_inject_blocks(plugins)
     size = sum(len(b.encode("utf-8")) for b in blocks)
@@ -312,7 +318,10 @@ def validate(plugins, errors):
     for name, m in sorted(plugins.items()):
         for dep in m.get("depends") or []:
             if dep not in plugins:
-                errors.append(f"[error] {name}/: dependency {dep} not found")
+                if scope:
+                    warnings.append(f"{name}/: dependency {dep} absent outside package {scope} (tolerated in single-package mode)")
+                else:
+                    errors.append(f"[error] {name}/: dependency {dep} not found")
     # cycle detection (DFS three-color marking)
     WHITE, GRAY, BLACK = 0, 1, 2
     color = {k: WHITE for k in plugins}
@@ -454,7 +463,7 @@ def do_audit(plugins, only=None):
     for pid in sorted(plugins):
         if only and pid != only:
             continue
-        cpath = os.path.join(PLUGINS_DIR, pid, "scripts", "check.py")
+        cpath = os.path.join(plugins[pid].get("_dir", os.path.join(PLUGINS_DIR, pid)), "scripts", "check.py")
         if not os.path.exists(cpath):
             continue
         spec = importlib.util.spec_from_file_location(f"plugin_check_{pid}", cpath)
@@ -683,9 +692,210 @@ def do_ls(plugins):
         print("\n".join(rows))
 
 
+def parse_pkg(path):
+    """Parse PKG.yaml's minimal shape (scalars / flow lists / block dict-lists / one nested mapping of lists); raises ValueError."""
+    data, target, item = {}, None, None
+
+    def flow_list(s):
+        s = s.strip()
+        if not (s.startswith("[") and s.endswith("]")):
+            raise ValueError(f"expected flow list, got: {s!r}")
+        inner = s[1:-1].strip()
+        return [strip_quotes(x.strip()) for x in inner.split(",")] if inner else []
+
+    for raw in open(path, encoding="utf-8").read().splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        indent = len(raw) - len(raw.lstrip(" "))
+        line = raw.strip()
+        if indent == 0:
+            m = re.match(r"^([A-Za-z_][\w-]*):\s*(.*)$", line)
+            if not m:
+                raise ValueError(f"unparsable line: {raw!r}")
+            key, val = m.group(1), m.group(2)
+            if val == "":
+                data[key] = None
+            elif val.startswith("["):
+                data[key] = flow_list(val)
+            else:
+                data[key] = strip_quotes(val)
+            target, item = key, None
+        elif indent == 2 and line.startswith("- "):
+            if target is None:
+                raise ValueError(f"list item before any key: {raw!r}")
+            body = line[2:]
+            if data.get(target) is None:
+                data[target] = []
+            if re.match(r"^[A-Za-z_][\w-]*:\s*\S", body) and ":" in body:
+                k, v = body.split(":", 1)
+                data[target].append({k.strip(): strip_quotes(v.strip())})
+                item = data[target][-1]
+            else:
+                data[target].append(strip_quotes(body))
+                item = None
+        elif indent == 2:
+            m = re.match(r"^([A-Za-z_][\w-]*):\s*(.*)$", line)
+            if not m or target is None:
+                raise ValueError(f"unparsable line: {raw!r}")
+            if data.get(target) is None:
+                data[target] = {}
+            k, v = m.group(1), m.group(2)
+            data[target][k] = flow_list(v) if v.startswith("[") else ([strip_quotes(v)] if v else [])
+            item = None
+        elif indent == 4 and item is not None:
+            m = re.match(r"^([A-Za-z_][\w-]*):\s*(.*)$", line)
+            if not m:
+                raise ValueError(f"unparsable line: {raw!r}")
+            item[m.group(1)] = strip_quotes(m.group(2))
+        else:
+            raise ValueError(f"unparsable line: {raw!r}")
+    return data
+
+
+def load_packages(errors):
+    """Read domains/*/PKG.yaml package declarations (D1); returns {pkg_id: pkg}."""
+    pkgs = {}
+    domains_dir = os.path.join(PLUGINS_DIR, "domains")
+    if not os.path.isdir(domains_dir):
+        return pkgs
+    for name in sorted(os.listdir(domains_dir)):
+        ppath = os.path.join(domains_dir, name, "PKG.yaml")
+        if not os.path.exists(ppath):
+            continue
+        try:
+            pkgs[name] = parse_pkg(ppath)
+            if pkgs[name].get("id") and pkgs[name]["id"] != name:
+                errors.append(f"[error] domains/{name}/PKG.yaml: id ({pkgs[name]['id']}) != directory name")
+        except ValueError as e:
+            errors.append(f"[error] domains/{name}/PKG.yaml: {e}")
+    return pkgs
+
+
+def framework_version():
+    """Framework version anchor (.meta/VERSION, 'X.Y' — #20 D2); None when absent."""
+    vpath = os.path.join(ROOT, ".meta", "VERSION")
+    if not os.path.exists(vpath):
+        return None
+    m = re.fullmatch(r"\s*(\d+)\.(\d+)\s*", open(vpath, encoding="utf-8").read())
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def validate_packages(plugins, pkgs, errors, warnings):
+    """Package invariants (issue #20 定稿 D1/D2/D5): roster == family closure (authoring side),
+    full presence (site side, v1 — subsets land with --without later), flat package graph,
+    compat vs the .meta/VERSION anchor."""
+    seen_member = {}
+    fw = framework_version()
+    if fw is None:
+        warnings.append(".meta/VERSION missing — framework anchor absent, PKG compat unchecked")
+    for pid, pkg in sorted(pkgs.items()):
+        members = pkg.get("members")
+        if not isinstance(members, list) or not members:
+            errors.append(f"[error] PKG {pid}: members must be a non-empty list")
+            continue
+        for mem in members:
+            if mem in seen_member:
+                errors.append(f"[error] PKG {pid}: member {mem} also declared by PKG {seen_member[mem]} (one plugin one package)")
+            seen_member[mem] = pid
+        if pid not in members:
+            errors.append(f"[error] PKG {pid}: family root {pid} must be a member (D5: roots are never prunable)")
+        closure = {pid} | {p for p in plugins if reaches_plugin(plugins, p, pid)}
+        for extra in sorted(set(members) - closure):
+            errors.append(f"[error] PKG {pid}: member {extra} declared but outside the family closure (depends chain never reaches {pid})")
+        for miss in sorted(closure - set(members)):
+            errors.append(f"[error] PKG {pid}: {miss} is in the family closure but missing from members (roster drift)")
+        for mem in members:
+            if mem not in plugins:
+                errors.append(f"[error] PKG {pid}: member {mem} not installed (site invariant — D5 subsets land with --without)")
+        for dep in pkg.get("depends") or []:
+            if dep != "framework":
+                errors.append(f"[error] PKG {pid}: package dependency {dep} not allowed in v1 (flat graph — framework only)")
+        if fw is not None:
+            compat = str(pkg.get("compat") or "")
+            m = re.fullmatch(r">=\s*(\d+)\.(\d+)", compat)
+            if not m:
+                warnings.append(f"PKG {pid}: compat ({compat!r}) not in '>= X.Y' form — unchecked (v1 supports only this form)")
+            elif (int(m.group(1)), int(m.group(2))) > fw:
+                errors.append(f"[error] PKG {pid}: compat {compat} exceeds framework version {'.'.join(map(str, fw))}")
+
+
+def do_pkg_ls(pkgs, plugins):
+    """Package inventory: PKG table + connectors + the implicit core remainder."""
+    claimed = {m for pkg in pkgs.values() for m in (pkg.get("members") or [])}
+    for pid, pkg in sorted(pkgs.items()):
+        members = pkg.get("members") or []
+        print(f"pkg {pid:<10} v{pkg.get('version','?'):<5} compat {str(pkg.get('compat','?')):<8} {len(members)} members: {', '.join(members)}")
+        for c in pkg.get("connectors") or []:
+            where = c.get("path") or ("external" if c.get("external") else "system" if c.get("system") else "?")
+            print(f"{'':16}connector {c.get('name')} ({where})")
+    core = sorted(p for p in plugins if p not in claimed)
+    print(f"core (framework): {len(core)}: {', '.join(core)}")
+
+
+def do_residual(pkg_id, pkgs):
+    """D6 residual scan: grep the semantic anchor surfaces for member references after/before uninstall."""
+    if not pkg_id:
+        print(__doc__)
+        return 2
+    pkg = pkgs.get(pkg_id)
+    if pkg is None:
+        print(f"[error] residual: no such package {pkg_id} (see: kernel pkg)")
+        return 1
+    tokens = [pkg_id] + [t for t in (pkg.get("members") or []) if t != pkg_id]
+    anchors = [AGENTS_MD,
+               os.path.join(ROOT, "wiki", "profile.md"),
+               os.path.join(ROOT, "wiki", "language.md"),
+               os.path.join(ROOT, "wiki", "calendar.md"),
+               os.path.join(ROOT, "wiki", "todo.md")]
+    crondir = os.path.join(ROOT, "wiki", "cron")
+    if os.path.isdir(crondir):
+        anchors += [os.path.join(crondir, f) for f in sorted(os.listdir(crondir)) if f.endswith(".md")]
+    hits = 0
+    for path in anchors:
+        if not os.path.exists(path):
+            continue
+        try:
+            lines = open(path, encoding="utf-8").read().splitlines()
+        except OSError:
+            continue
+        inside_inject = False
+        for i, line in enumerate(lines, 1):
+            if INJECT_START in line:
+                inside_inject = True
+            if INJECT_END in line:
+                inside_inject = False
+                continue
+            if inside_inject:
+                continue  # kernel-managed region — cleaned mechanically on uninstall
+            for t in tokens:
+                if re.search(rf"(?<![\w-]){re.escape(t)}(?![\w-])", line):
+                    print(f"[residual] {os.path.relpath(path, ROOT)}:{i}: references {t}: {line.strip()[:120]}")
+                    hits += 1
+                    break
+    if hits:
+        print(f"[residual] {hits} reference(s) on semantic anchor surfaces (handwritten AGENTS region / profile / language / calendar / todo / cron) — semantic cleanup before/after uninstall, per PKG uninstall.bridges")
+    else:
+        print("[residual] clean — no member references on semantic anchor surfaces")
+    return 0
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    # binding-round placeholders (#20 定稿 D5/D6): real wiring lands with the process round
+    if cmd in ("install", "uninstall", "list-remote", "upgrade"):
+        print(f"[pending] {cmd}: 占位——流程轮接通（#20 定稿；卸载语义先见 PKG.yaml uninstall 段 + residual 命令）")
+        return 1
     plugins, errors = load_plugins()
+    pkgs = load_packages(errors)
+    if cmd == "pkg":
+        if errors:
+            for e in errors:
+                print(e)
+            return 1
+        do_pkg_ls(pkgs, plugins)
+        return 0
+    if cmd == "residual":
+        return do_residual(sys.argv[2] if len(sys.argv) > 2 else None, pkgs)
     if cmd == "ls":
         do_ls(plugins)
         if errors:
@@ -698,15 +908,31 @@ def main():
     if cmd not in ("validate", "inject", "registry", "deploy", "all"):
         print(__doc__)
         return 2
-    validate(plugins, errors)
-    validate_bindings(plugins, errors)
-    validate_bridges(plugins, errors)
+    scope = None
+    if len(sys.argv) > 3 and sys.argv[2] == "--scope":
+        scope = sys.argv[3]
+        if scope not in pkgs:
+            print(f"[error] --scope {scope}: no such package (see: kernel pkg)")
+            return 1
+        members = set(pkgs[scope].get("members") or [])
+        plugins = {p: m for p, m in plugins.items() if p in members}
+    warns = []
+    validate(plugins, errors, scope=scope, warnings=warns)
+    if scope:
+        print(f"[scope] bindings/bridges/package checks skipped — single-package mode over {scope} (full-graph disciplines run where the full graph lives)")
+    else:
+        validate_bindings(plugins, errors)
+        validate_bridges(plugins, errors)
+        validate_packages(plugins, pkgs, errors, warns)
+    for w in warns:
+        print(f"[warning] {w}")
     for e in errors:
         print(e)
     if errors:
         print(f"[result] validation failed ({len(errors)} errors) — mechanical actions blocked")
         return 1
-    print(f"[validate] all {len(plugins)} plugins passed (fields / id match / deps exist / acyclic / command bindings / usage routes / bridges)")
+    label = f"package {scope}" if scope else f"all {len(plugins)} plugins"
+    print(f"[validate] {label} passed (fields / id match / deps exist / acyclic / command bindings / usage routes / bridges)")
     if cmd in ("inject", "all"):
         if not do_inject(plugins):
             return 1
