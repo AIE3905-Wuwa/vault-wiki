@@ -11,7 +11,7 @@ The user specifies a scope (+ optional samples); reading the bb-track cognition 
 
 ## Scope
 
-Write: cuhksz/bb/<term>/<course>/notes/testing/ (`<name>-试题.md` + `-答案.md` + appended `## Grading`, origin: ai, append-only), log (one post-write line); user.md grading write-back (via the bb-track write contract, after user confirmation)
+Write: cuhksz/bb/<term>/<course>/notes/testing/ (`<name>-questions.md` + `-answers.md` + appended `## Grading`, origin: ai, append-only), log (one post-write line); user.md grading write-back (via the bb-track write contract, after user confirmation)
 Read: registry (`.meta/protocol/registry.yaml`, field anchor), courseware (sm-N + terminology), assessments (known assignments), user.md (bb-track cognition profile), notes/ ai notes (best-effort)
 
 ## Steps
@@ -21,7 +21,7 @@ Read: registry (`.meta/protocol/registry.yaml`, field anchor), courseware (sm-N 
 3. **Read user cognition**: user.md proficiency/goal layer; when stale use the conservative tier, on cold start treat everything as unanchored
 4. **Set question type and difficulty median**: samples → known assignments → user habits (details in the injection region)
 5. **[best-effort] Read teaching minutes**: notes/ origin: ai notes — silently skip if absent or empty
-6. **Generate questions and write**: `notes/testing/<name>-试题.md` + `-答案.md` (quiz block mapping + origin: ai; the question page contains no answers) + log line + verify
+6. **Generate questions and write**: `notes/testing/<name>-questions.md` + `-answers.md` (quiz block mapping + origin: ai; the question page contains no answers) + log line + verify
 7. **[After answering] grading flows back**: judge question by question → append `## Grading` to the answer page (date + per-question correctness + score) → write back to the user.md evidence stream after user confirmation (machine self-test) → verify
 
 ## Prohibitions

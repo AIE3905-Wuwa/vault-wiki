@@ -18,21 +18,21 @@
 
 ## Example
 
-`wiki/sessions/2026-09-12-雾港美术风格定稿.md`:
+`wiki/sessions/2026-09-12-fog-harbor-art-style-finalized.md`:
 
 ```markdown
 ---
 type: session
-title: 雾港美术风格定稿
+title: Fog Harbor art style finalized
 participants: [human:Joss, agent/GLM-5.3]
 created: 2026-09-12
-tags: [游戏/美术]
+tags: [game/art]
 ---
 # Core Conclusions
 Low-poly plus volumetric fog finalized; moving on to scene art outsourcing inquiries.
 
 # Decisions & Rationale
-Pixel art rejected: poor silhouette readability. See [[notes/雾港美术风格决策]].
+Pixel art rejected: poor silhouette readability. See [[notes/fog-harbor-art-style-decision]].
 
 # Non-obvious Insights
 The budget-overrun risk concentrates in scene art outsourcing (quoted 168k, 40% over budget).
@@ -41,7 +41,7 @@ The budget-overrun risk concentrates in scene art outsourcing (quoted 168k, 40% 
 The performance budget for volumetric fog on low-end machines?
 
 # Related Pages
-- [[notes/雾港美术风格决策]] (the decision page promoted out of this session)
+- [[notes/fog-harbor-art-style-decision]] (the decision page promoted out of this session)
 ```
 
 ## Invariants
