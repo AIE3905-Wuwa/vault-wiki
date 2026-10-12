@@ -804,9 +804,17 @@ def validate_packages(plugins, pkgs, errors, warnings):
             errors.append(f"[error] PKG {pid}: member {extra} declared but outside the family closure (depends chain never reaches {pid})")
         for miss in sorted(closure - set(members)):
             errors.append(f"[error] PKG {pid}: {miss} is in the family closure but missing from members (roster drift)")
-        for mem in members:
-            if mem not in plugins:
-                errors.append(f"[error] PKG {pid}: member {mem} not installed (site invariant — D5 subsets land with --without)")
+        absent = [mem for mem in members if mem not in plugins]
+        if pid not in plugins:
+            errors.append(f"[error] PKG {pid}: family root {pid} must be installed (D5: roots are never prunable)")
+        elif absent:
+            closed = all(dep not in members or dep in plugins
+                         for mem in members if mem in plugins
+                         for dep in (plugins[mem].get("depends") or []))
+            if closed:
+                warnings.append(f"PKG {pid}: subset install — pruned {', '.join(absent)} (D5 legal subset)")
+            else:
+                errors.append(f"[error] PKG {pid}: installed subset not dependency-closed (structural member pruned while dependents remain — see kernel plan <pkg> --without ...)")
         for dep in pkg.get("depends") or []:
             if dep != "framework":
                 errors.append(f"[error] PKG {pid}: package dependency {dep} not allowed in v1 (flat graph — framework only)")
@@ -964,6 +972,10 @@ def do_install(spec, args):
     if "--path" in args:
         i = args.index("--path")
         path = args[i + 1] if i + 1 < len(args) else None
+    without = []
+    if "--without" in args:
+        i = args.index("--without")
+        without = [x for x in args[i + 1].split(",") if x] if i + 1 < len(args) else []
     if not pkg and not path:
         print(__doc__)
         return 2
@@ -1028,12 +1040,42 @@ def do_install(spec, args):
         if idx_members and idx_members != pkg_members:
             print(f"[error] index members {sorted(idx_members)} != PKG.yaml members {sorted(pkg_members)} (index <-> package drift — refuse)")
             return 1
+    members_all = [str(m) for m in (pkgm.get("members") or [])]
+    pruned = set()
+    if without:
+        bad = [w for w in without if w not in members_all]
+        if bad:
+            print(f"[error] --without {', '.join(bad)}: not members of {pid}")
+            return 1
+        if pid in without:
+            print(f"[error] --without {pid}: the family root is never prunable (D5)")
+            return 1
+        depends_in = {}
+        for m in members_all:
+            try:
+                deps = parse_manifest(os.path.join(src, m, "PLUGIN.yaml")).get("depends") or []
+            except ValueError:
+                deps = []
+            depends_in[m] = [d for d in deps if d in members_all]
+        pruned = set(without)
+        changed = True
+        while changed:
+            changed = False
+            for m in members_all:
+                if m not in pruned and m != pid and set(depends_in[m]) & pruned:
+                    pruned.add(m)
+                    changed = True
+        if pid in pruned or not [m for m in members_all if m not in pruned]:
+            print(f"[error] --without cascade prunes the whole package (root or all members)")
+            return 1
+        print(f"[install] subset: final members {', '.join(m for m in members_all if m not in pruned)}; pruned {', '.join(sorted(pruned))}")
     dst = os.path.join(PLUGINS_DIR, "domains", pid)
     if os.path.exists(dst):
         print(f"[error] {pid} already installed — uninstall first (kernel uninstall {pid} --yes)")
         return 1
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__"))
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__",
+                                                            *[f"{m}/" for m in pruned]))
     copied_conn, copied_cmd = [], []
     csrc = os.path.join(src, "connectors")
     if os.path.isdir(csrc):
@@ -1167,8 +1209,107 @@ def do_upgrade(pkg):
     return 0
 
 
+def do_plan(spec, args):
+    """One-shot disclosure plan (consent-wizard data source): trust, package disclosure, baseline/optional members, connectors, suggested command. Never interactive."""
+    import json as _json
+    pkg, _, tag = spec.partition("@") if spec else ("", "", "")
+    if not pkg:
+        print(__doc__)
+        return 2
+    errors = []
+    index, _src = load_index(errors, quiet=True)
+    entry = index.get(pkg)
+    direct = entry is None
+    if direct:
+        if not ("/" in pkg or pkg.startswith(("https://", "git@"))):
+            print(f"[error] package {pkg} not in the index (registry)")
+            for e in errors:
+                print(e)
+            return 1
+        url = pkg if pkg.startswith(("https://", "git@")) else f"https://github.com/{pkg}.git"
+        entry = {"repo": url, "trust": "unknown (unindexed direct)", "version": ""}
+    src = _clone_package(entry, pkg, tag or None, errors)
+    for e in errors:
+        print(e)
+    if src is None:
+        return 1
+    try:
+        pkgm = parse_pkg(os.path.join(src, "PKG.yaml"))
+    except ValueError as e:
+        print(f"[error] PKG.yaml: {e}")
+        shutil.rmtree(src, ignore_errors=True)
+        return 1
+    pid = str(pkgm.get("id") or pkg)
+    members = [str(m) for m in (pkgm.get("members") or [])]
+    menu = pkgm.get("menu") or {}
+    depends_in = {}
+    for m in members:
+        try:
+            deps = parse_manifest(os.path.join(src, m, "PLUGIN.yaml")).get("depends") or []
+        except ValueError:
+            deps = []
+        depends_in[m] = [d for d in deps if d in members]
+
+    def closure_of(m):
+        out, stack = set(), [m]
+        while stack:
+            x = stack.pop()
+            for d in depends_in.get(x, []):
+                if d not in out:
+                    out.add(d)
+                    stack.append(d)
+        return out
+
+    optional = [m for m in members if m != pid]
+    plan = {
+        "package": pid,
+        "version": pkgm.get("version"),
+        "compat": pkgm.get("compat"),
+        "trust": entry.get("trust", "?"),
+        "disclosure": pkgm.get("disclosure") or "(no package disclosure declared)",
+        "baseline": [{"id": pid, "summary": menu.get(pid, "")}],
+        "optional": [{"id": m, "summary": menu.get(m, ""), "pulls": sorted(closure_of(m) - {pid})} for m in optional],
+        "connectors": [{"name": c.get("name"), "kind": ("external" if c.get("external") else "system" if c.get("system") else "in-repo")}
+                       for c in (pkgm.get("connectors") or [])],
+        "suggested_command": f"kernel install {pid}" + (" --yes" if direct else ""),
+    }
+    # subset preview when --without given
+    if "--without" in args:
+        i = args.index("--without")
+        wl = [x for x in args[i + 1].split(",") if x] if i + 1 < len(args) else []
+        pruned = set(wl)
+        changed = True
+        while changed:
+            changed = False
+            for m in members:
+                if m not in pruned and m != pid and set(depends_in[m]) & pruned:
+                    pruned.add(m)
+                    changed = True
+        plan["subset_preview"] = {"final": [m for m in members if m not in pruned], "pruned": sorted(pruned)}
+        plan["suggested_command"] += f" --without {','.join(wl)}"
+    shutil.rmtree(src, ignore_errors=True)
+    if "--json" in args:
+        print(_json.dumps(plan, ensure_ascii=False, indent=2))
+        return 0
+    print(f"[plan] {pid} v{plan['version']} (compat {plan['compat']}) — trust: {plan['trust']}")
+    print(f"[plan] disclosure: {plan['disclosure']}")
+    print(f"[plan] baseline (always installed): {pid}" + (f" — {menu.get(pid, '')}" if menu.get(pid) else ""))
+    for o in plan["optional"]:
+        pulls = f" — pulls: {', '.join(o['pulls'])}" if o["pulls"] else ""
+        print(f"[plan]   optional: {o['id']}" + (f" — {o['summary']}" if o["summary"] else "") + pulls)
+    if plan["connectors"]:
+        print("[plan] connectors (ride the package): " + ", ".join(f"{c['name']} ({c['kind']})" for c in plan["connectors"]))
+    if "subset_preview" in plan:
+        sp = plan["subset_preview"]
+        print(f"[plan] subset preview: final {', '.join(sp['final'])}; pruned {', '.join(sp['pruned'])}")
+    print(f"[plan] suggested: {plan['suggested_command']}")
+    return 0
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    if cmd == "plan":
+        return do_plan(sys.argv[2] if len(sys.argv) > 2 else "", sys.argv[3:])
     if cmd == "install":
         return do_install(sys.argv[2] if len(sys.argv) > 2 else "", sys.argv[3:])
     if cmd == "uninstall":

@@ -1,48 +1,57 @@
 ---
 name: plugin
 owner: framework
-description: "Plugin lifecycle management: install/upgrade/uninstall/list. Mechanical steps (compliance, dependencies, injection regions, registry, copy sync) are executed by .meta/scripts/wiki_plugin_kernel.py; the agent does only the semantic part. Triggers on: plugin, 插件, 装插件, 卸插件, install plugin, uninstall plugin."
+description: "Package & plugin lifecycle management: plan (disclosure wizard), install (three channels + --without subsets), uninstall, list-remote, upgrade, pkg, residual. Mechanical steps all go through .meta/scripts/wiki_plugin_kernel.py; the agent runs the consent conversation and the one-shot commands. Triggers on: plugin, 插件, 装插件, 卸插件, 装包, install package, uninstall package."
 ---
 
-# plugin: plugin (un)install
+# plugin: package lifecycle
 
-The framework's self-management command. All mechanical steps go through scripts; the agent does only the semantic part (plugin body content, changelog review, flow smoke test). Lifecycle rules: self-check must pass before (un)installing; uninstalling a depended-on plugin is blocked.
+The framework's self-management command, package era (issue #20). Every mechanical step goes through the kernel script; the agent's job is **consent and choice** — never writing `.meta/` by hand.
 
 ## Scope
 
-Write: `.meta/plugins/<id>/` ((un)install), the AGENTS.md injection region, the `.meta/protocol/registry.yaml` plugin section, `.agents/skills/` command copies, wiki/log.md (all four projection sites go through the script)
-Read: all manifests, `.meta/scripts/wiki_plugin_kernel.py`
+Write: only via the kernel script (package masters in/out, connectors/, command masters, injection region, registry, skill copies — six sites)
+Read: INDEX via the kernel, PKG.yaml, manifests
 
-## Install <id>
+## Discovery → download: the consent wizard (human path)
 
-1. Prepare `.meta/plugins/<id>/`:
-   - PLUGIN.yaml: seven required fields id / version / depends / updated / attachment / fields / inject (`inject` is the plugin's one-line disclosure — the injection-region projection when tier is full) + optional commands (the commands this plugin drives) / usage / checks (block-style lists: the projection sources of write-side contracts and check rules) / usage_routes (additional commands the usage lands in, source-side routing — installing a plugin lands its projections) / inject_tier (full|member, default full — member exits the injection region, riding on the family root's roster line + skills + L-layer reads; domain family members set this, see the kernel reference tier law)
-   - PLUGIN.md structure: design summary (why it exists / position in the family / key rulings including rejected alternatives / mechanics back-references) → Structure → Invariants → Changelog (pure documentation; all injection sources live in the manifest)
-2. `python .meta/scripts/wiki_plugin_kernel.py validate` — compliance and dependency checks; errors block
-3. `python .meta/scripts/wiki_plugin_kernel.py all` — injection region / registry / command-copy sync
-4. Flow smoke test: `python .meta/scripts/wiki_plugin_kernel.py audit <id>` (if the plugin carries an attached-audit script) + walk the key flows from the new plugin's PLUGIN.md against test assets (the behavior layer of the draft three-tier check)
-5. Prepend one line to wiki/log.md (type "plugin")
+When a user asks to install a package and has NOT already specified what to include:
 
-## Upgrade <id>
+1. `python .meta/scripts/wiki_plugin_kernel.py plan <pkg>` — one-shot disclosure plan: trust line, package disclosure (network/privacy/credentials, package-authored), baseline (the family root, always installed), optional members with one-line summaries and what each selection pulls in, connectors
+2. Relay the plan **in the user's language** (render at the agent layer per wiki/language.md — canonical texts are English; the agent translates when relaying, never edits the source)
+3. Walk the steps: trust + disclosure → user acknowledges; optional members → user picks (each pick auto-pulls its dependency closure — show the resolved final set, users cannot compose an illegal subset); connectors → confirm (they ride the package)
+4. Execute: `python .meta/scripts/wiki_plugin_kernel.py install <pkg> --without <unwanted> [--yes]`
+5. Report the convergence output (validate/inject/registry/deploy) in one breath
 
-1. Modify the plugin; bump the manifest `version`, refresh `updated`; add a line to the PLUGIN.md changelog
-2. `python .meta/scripts/wiki_plugin_kernel.py all` — validate + injection-block version sync
-3. A wiki/log.md "plugin" line
+## One-shot path (agent / pre-authorized)
 
-## Uninstall <id>
+If consent already exists (user named exactly what they want, or pre-authorized), skip the conversation:
 
-1. `python .meta/scripts/wiki_plugin_kernel.py validate` — if any plugin depends on it → blocked (unless the user explicitly cascades)
-2. Move the directory out of `.meta/plugins/` (kept as archive; physical deletion always belongs to the human)
-3. `python .meta/scripts/wiki_plugin_kernel.py all` — it disappears from the injection region / registry accordingly
-4. A wiki/log.md "plugin" line
+```
+python .meta/scripts/wiki_plugin_kernel.py plan <pkg> --json        # machine-readable plan (optional)
+python .meta/scripts/wiki_plugin_kernel.py install <pkg> [--without a,b] [--yes]
+```
 
-## ls
+Kernel commands never prompt — every invocation completes in one shot.
 
-- `python .meta/scripts/wiki_plugin_kernel.py ls` (list + dependencies)
+## Command surface
+
+| Command | What it does |
+|---|---|
+| `plan <pkg> [--json] [--without a,b]` | disclosure plan (+ subset preview); clone discarded, nothing installed |
+| `install <pkg>[@tag]` | registry path: trust gate → clone → verify (id/compat/members ↔ index) → place masters/connectors/commands → converge |
+| `install <owner/repo> --yes` | unindexed direct install (trust: unknown — the registry PR is how a package earns reviewed trust) |
+| `install <pkg> --path <dir>` | local package (developer loop, channel C) |
+| `install ... --without a,b` | D5 subset: named leaves + their dependents pruned; root never prunable; result is dependency-closed by construction |
+| `uninstall <pkg> --yes` | D6 four-clear + convergence + residual scan + retains/credentials reminders; data zones and credentials never touched |
+| `list-remote` | registry index with members and trust marks |
+| `upgrade` | reconciliation report; upgrades run uninstall+install per package, never cascaded |
+| `pkg` / `ls` / `residual <pkg>` | local inventory / plugin list / anchor-surface reference scan |
 
 ## Boundaries
 
-- The script touches only four sites: plugin directories in/out, injection-region marker blocks, the registry plugin section, and command copies; the protocol / reserved sections and the AGENTS.md handwritten region are never touched
-- Attached-audit contract (optional): `scripts/check.py` defines `check(ctx)` returning an issue list (level + message), read-only with zero side effects, Chinese messages, no third-party dependencies; ctx.root = repository root, ctx.pages = the wiki page set from a single scan
-- Uninstall archiving and deletion are separate: moving out = uninstalling; deletion belongs to the human
-- Errors printed by the script always block the operation — rerun after fixing; warnings (e.g. orphan copies) are reported only
+- **Consent is the agent's duty**: no install without user acknowledgment of the disclosure (unless pre-authorized); `--yes` gates exist precisely so consent is explicit
+- **Trust is earned in the registry**: unindexed = installable but flagged unknown; the one-line registry PR is the review gate (inject text and connectors are the security faces)
+- The script touches only its six mechanical sites; data zones (`wiki/`, `vault/`, `cuhksz/`, `projects/`), credentials (`~/*-cli`), and the AGENTS.md handwritten region are never touched
+- Errors from the script always block; warnings are reported only
+- Uninstall leaves data in place (deprecated posture); physical deletion belongs to the human
