@@ -25,7 +25,7 @@
 
 ## Changelog
 
-- 0.4 2026-10-02: global-domain batch one — attach the mandatory trust and log bridge edges; constitution principle 11, kernel verifies completeness
+- 0.5 (2026-10-06) inject line compressed to pointer density (issue #12 layer discipline) (family roster duty added) — procedural detail lives in usage / PLUGIN.md / skills- 0.4 2026-10-02: global-domain batch one — attach the mandatory trust and log bridge edges; constitution principle 11, kernel verifies completeness
 - 0.3 2026-09-22: domainization — depends adds domain, a self-standing container domain; wiki-side declaration-only disclosure = zero-translation projection density for an md-native territory; contract in the domain plugin
 - 0.2 2026-09-19: the body leaves the wiki — projects land in the root container `projects/<name>/`, workspaces with full agent read/write; the four-section self-description travels with the project as `project.md`; the wiki side converges to the declaration page plus bidirectional diff, the structure precedent's second consumer; 0.1's `wiki/projects/` territory retired
 - 0.1 2026-09-19: established — one project one page four-section regime, open stage vocabulary, the todo boundary, task-line lightweight i.e. the light-before-heavy ruling

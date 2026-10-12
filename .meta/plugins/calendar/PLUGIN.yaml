@@ -1,5 +1,5 @@
 id: calendar
-version: 0.2
+version: 0.4
 bridge: 按需
 depends:
   - wiki
@@ -10,7 +10,7 @@ attachment:
   - "wiki/calendar/ — month pages YYYY-MM.md (one page per month, two-section scheme)"
 fields:
   calendar: "block mapping (declaration page) — source key → source declaration (value syntax belongs to the adapter: lark-calendar uses `lark/<profile> <calendar_id|primary>`); the source key is the end-of-line tag on schedule lines"
-inject: "Time territory: declaration page `wiki/calendar.md` (`calendar` block mapping = source key → source declaration, manual-only may be absent) + month pages `wiki/calendar/YYYY-MM.md` (two-section scheme — `## Schedule` is the source projection, refreshed wholesale by section; `## Manual Notes` is append-only; event lines `- MM-DD HH:MM~HH:MM Title (source key)` may carry a wikilink, events get no pages); future rolling, past frozen (a month may not be rewritten once over); month pages stale_after defaults to 2 days; boundary with todo — the calendar stores what happens when, todo stores what is pending, one-way derivation allowed; calendar on-demand bridge — domain plugins one-way derive source-keyed schedule lines into the current month's `## Schedule` (constitutional principle 11, format owned by this bridge)"
+inject: "Time territory: declaration page wiki/calendar.md (calendar block mapping = source key → declaration; absent = manual-only) + month pages wiki/calendar/YYYY-MM.md — ## Schedule source projection refreshed wholesale + ## Manual Notes append-only; event lines may wikilink, events get no pages; future rolling, past frozen; month stale_after default 2 days; boundary — calendar stores what happens when, todo what is pending; on-demand bridge (domains derive source-keyed lines into the current month)"
 usage:
   - Sync (mechanical): read the declaration page's source list → each source pulled for the current and next month by its adapter → wholesale section refresh of each month page's `## Schedule` (lines tagged with the source key) → `pipeline.py verify` + log line + commit (`映射: calendar`)
   - Daily refresh (unattended session): deployment-side cron triggers the sync session on schedule, fully mechanical, no confirmation needed; failed sources are reported via log and do not block other sources; semantic enhancements (event notes, link completion) are left to interactive sessions

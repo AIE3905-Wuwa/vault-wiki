@@ -26,4 +26,6 @@
 
 ## Changelog
 
+- 0.2 (2026-10-06) inject_tier: member — exits the AGENTS.md injection region per the issue #12 layer discipline (exposure: family-root roster line + skill catalog + on-demand manifest reads)
+
 - 0.1 (2026-10-05) established: first established with the cuhksz domain; the university-wide 9-college + double-major/joint/minor pointer list completed by field verification on the official site (42 major pages verified one by one)

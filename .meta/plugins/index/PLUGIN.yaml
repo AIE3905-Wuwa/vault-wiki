@@ -1,5 +1,5 @@
 id: index
-version: 0.12
+version: 0.13
 depends:
   - tag
   - wiki
@@ -9,7 +9,7 @@ attachment:
   - "Per-directory index.md — born of the overflow-offloading scheme (split out when a list overflows the window, disappearing on rebuild once merged back into the parent)"
   - "wiki/tags.md — tag reverse index"
 fields: {}
-inject: "Index overflow-offloading scheme: the root `wiki/index.md` is always present (carries format_version — the page-format contract version, bumped on incompatible changes), directly listing all reachable pages (this directory + un-split subtrees, full-path wikilinks); when some index list overflows the window (≤25 entries, parameters per the pipeline source code), subtrees are split out in descending page-count order into their own `index.md` (entry line carrying the page count) — small repositories usually keep a single index, the disclosure boundary emerges with content quality; `wiki/tags.md` (tag reverse index) unchanged; aggregate only, never hand-edited, pure-function rebuild, indexes do not invent structure (a level's flat list overflowing the window is listed in full as-is; the cure is subdirectories, not index changes); rebuild via `pipeline.py index`, the second retrieval entry"
+inject: "Index overflow-offloading: root wiki/index.md always present (carries format_version), listing all reachable pages full-path; a list over the window (params in pipeline source) splits subtrees into their own index.md by descending page count; wiki/tags.md unchanged; aggregate only, never hand-edited, pure-function rebuild (pipeline.py index); indexes invent no structure — overflow lists in full as-is, the cure is subdirectories"
 usage:
   - Post-write rebuild (mechanical, automatic): `python .meta/scripts/pipeline.py index` (index — overflow-offloading scheme, including deletion of obsolete old indexes after merge-back) and the same script's `tags` (tag reverse index); LLMs never hand-write indexes
 checks:

@@ -1,5 +1,5 @@
 id: device
-version: 0.2
+version: 0.4
 depends:
   - wiki
 updated: 2026-10-06
@@ -8,7 +8,7 @@ attachment:
   - "scripts/check.py — attached audit (warranty_until within 30 days of expiry / already expired → warning list)"
 fields:
   device: block mapping (device profile page in notes) — serial (serial number) / purchased (purchase date YYYY-MM-DD) / warranty_until (warranty or coverage end date YYYY-MM-DD, the attached-audit scan item), a three-key minimal set; remaining keys open (model, vendor, etc.; the architecture does not enumerate)
-inject: "Device profiles: one page per personal device in `wiki/notes/` (type: entity as a suggested form; page name free, same names disambiguated by suffix); the frontmatter `device` block mapping registers serial / purchased / warranty_until (minimal key set, the rest open: model, vendor, etc.); the body `## Tool Environment` summary section records presence-level info on connectors/runtimes/channels (for cross-device lookup, synced when software is (un)installed; no full software inventory — look it up live); invoice-photo-type assets are materialized via vault and linked to the page by wikilink (cross-plugin references establish no dependency); trust optional — human registration is itself human evidence, static facts carry no stale_after; expiry reminders — the attached audit scans warranty_until, presenting a warning list for entries within 30 days or already expired, and appends a todo line upon user confirmation as a delegation (append upon delegation, never written automatically); real-time status monitoring and team device lending are not done (scope boundary)"
+inject: "Device profiles: one page per personal device in wiki/notes/ (type: entity suggested); device block mapping minimal keys serial/purchased/warranty_until, rest open; body ## Tool Environment = presence-level connector/runtime/channel registry for cross-device lookup (synced on (un)install, no full inventory); invoice assets via vault + wikilink; attached audit scans warranty_until (30-day window → warning list; todo line only upon confirmation); no real-time monitoring, no team lending"
 usage:
   - Registration: natural-language editing in conversation suffices (no command) — one page per device in `wiki/notes/`, type: entity (suggested form); page name free, same names disambiguated by suffix; `device` block mapping minimal keys serial / purchased / warranty_until, remaining keys open
   - Tool environment: the device page body's `## Tool Environment` summary section — records connector presence (lark-cli, bb-cli, etc.), runtimes (python, node), channels (ssh, web entries) and the device's purpose; only presence-level, never exact versions (look up live); sync this section when software is (un)installed; no full software inventory; this section is the cross-device lookup registry — the AGENTS shell reaches only this machine, device pages cover all relevant devices, the shell pointing to the device pages

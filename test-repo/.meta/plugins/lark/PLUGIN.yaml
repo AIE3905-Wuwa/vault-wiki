@@ -1,5 +1,5 @@
 id: lark
-version: 0.4
+version: 0.5
 depends:
   - domain
   - wiki
@@ -12,7 +12,7 @@ fields:
   lark: "block mapping — profile (owning enterprise identity, = the containing directory name) / kind (page form: profile identity page, docs domain hub, docx|wiki|sheet|base|file… object types, open vocabulary constrained by domain plugins) / token (object token, identity proof, page↔token one-to-one) / url (lark-side address)"
 commands:
   - lark-map
-inject: "External pointer territory `wiki/lark/<profile>/` (one directory per enterprise, directory name = lark-cli --profile name, agent calls must always carry it): the base establishes the profile abstraction and the identity page `profile.md` (one sentence + TTL override), domain plugins (lark-docs…) expand in parallel under any profile; pointer pages type: lark + `lark` block mapping (profile/kind/token/url), token↔page one-to-one is the identity proof; trust ceiling machine-confirmed, stale_after = pull date + TTL (default 7 days), check stale before use — when stale, pull fresh with --profile to refresh (the agent is the synchronizer); resources gone → mark status: deprecated, never delete; a new profile = create directory + identity page, domain plugins cover it automatically; CLI discipline: --profile always carried, auth checked live never written to disk, before entering a new domain lark-cli skills read comes first; territory pages come in two forms — pointer pages fully regenerable, archive pages partitioned (frontmatter mechanical section maintained by reconciliation + body accumulation section append-only, form owned by domain plugins)"
+inject: "External pointer domain wiki/lark/<profile>/ (one directory per enterprise, name = lark-cli --profile, always carried): identity page profile.md per profile (one sentence + TTL override); territory two forms — pointer pages (type: lark + lark block mapping profile/kind/token/url, token one-to-one with the page = identity proof, fully regenerable) and archive pages (mechanical section + append-only accumulation, form owned by domain plugins); subdomains lark-docs cloud docs · lark-im interpersonal · lark-calendar calendar adapter; trust ceiling machine-confirmed, stale_after = pull + TTL (default 7 days, overridable), agent = synchronizer; resources gone → status: deprecated, never deleted; CLI discipline — --profile always, auth live never on disk; member detail on demand (skills + manifests)"
 usage:
   - Pointer page registration fields: `type: lark` + `lark` block mapping (profile = containing directory name, kind = object type, token, url) + generated / stale_after
   - On a stale pointer page: pull fresh with `--profile` via lark-cli, overwriting the frontmatter mechanical fields (updated / stale_after); snapshot-type body content is appended, never overwritten

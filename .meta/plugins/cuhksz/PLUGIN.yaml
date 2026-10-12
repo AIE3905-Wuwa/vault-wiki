@@ -1,5 +1,5 @@
 id: cuhksz
-version: 0.2
+version: 0.3
 depends:
   - domain
   - wiki
@@ -11,7 +11,7 @@ attachment:
   - "wiki/cuhksz/ — domain territory: identity.md (domain declaration page doubling as the enrollment identity page) + bb/ (course operations territory, governed by the bb domain plugin) + sis/ (student records territory, governed by the sis domain plugin) + registry/ (academic regulations territory, governed by the registry domain plugin)"
 fields:
   sis: "block mapping (enrollment identity page identity.md) — student_id / college / school / major / admitted / status (data source: sis-cli transcript; one-to-one with the connector identity, i.e. the domain identity proof)"
-inject: "CUHK-SZ school domain `wiki/cuhksz/` (external territory = the cuhk.edu.cn school-system family: bb.cuhk.edu.cn course operations · sis.cuhk.edu.cn student records · registry.cuhk.edu.cn academic regulations; unified auth via STS ADFS, connectors bb-cli / sis-cli purely read-only): domain declaration page identity.md (type: cuhksz + sis block mapping for enrollment identity, **created when absent** — data source sis-cli transcript); the domain root holds only identity and subsystem navigation, digests belong to each subdomain; the subsystem family (bb's five plugins / sis / registry) attaches via depends and belongs to the domain transitively; intra-domain cross-references are bridge-exempt (constitution principle 11: direct reference within the same domain); personal official PDFs (certificates/transcripts) land in cuhksz/sis/ as in-domain materialization — **when a domain has its own self-standing container, materialization lands inside the domain; vault is only the fallback for containerless domains** (2026-10-05 owner ruling revision, abandoning the vault-borrowing inertia of the device precedent)"
+inject: "CUHK-SZ school domain wiki/cuhksz/ + data zone cuhksz/ (external: the cuhk.edu.cn school-system family — bb course ops · sis student records · registry academic regulations; connectors bb-cli / sis-cli read-only): identity page identity.md (type: cuhksz + sis enrollment block mapping, created when absent); family — bb course ops (members bb-map mapping · bb-track cognition · bb-teach teaching · bb-quiz self-test, connector bb-cli), sis records (connector sis-cli), registry regulations (cuhksz/registry/ materialization + schemes.md index, no connector); official personal PDFs land in-domain (cuhksz/sis/), vault only the containerless fallback; red lines: credentials stay local, enrollment/course/grade data never enters the framework repo; member detail on demand (skills + manifests); trust per subsystem"
 usage:
   - Intra-domain plugin contract: depending on cuhksz means belonging to the domain; each subsystem governs its own territory and data zone (bb → wiki/cuhksz/bb/ + cuhksz/bb/, sis → wiki/cuhksz/sis/, registry → wiki/cuhksz/registry/ + cuhksz/registry/); the domain base holds no content
   - Identity page creation: fresh-pull sis-cli transcript, write the sis block mapping + generated/trust into identity.md; update on enrollment changes (major transfer / graduation / status change)

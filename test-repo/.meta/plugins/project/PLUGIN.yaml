@@ -1,5 +1,5 @@
 id: project
-version: 0.4
+version: 0.5
 depends:
   - domain
   - wiki
@@ -11,7 +11,7 @@ attachment:
   - "wiki/projects.md — declaration page (`projects` block mapping = project name → one sentence; bidirectional diff drift detection, the structure precedent)"
 fields:
   projects: "block mapping (declaration page) — project name → one-sentence positioning; keys should correspond one-to-one with the directories under projects/ (bidirectional diff)"
-inject: "Project containers `projects/<project name>/` (workspaces, full agent read/write — versus vault's append-only): the project body and its tracking live entirely in the folder, the conventional self-description `project.md` (four sections: goal & context / stages (checkboxes + dates) / tasks (lines, not pages) / decisions (append-only); stage vocabulary planning/in-progress/paused/completed open); on the wiki side only the declaration page `wiki/projects.md` (type: project, `projects` block mapping = project name → one sentence, bidirectional diff against the directories, drift same as structure); searches involving project content go directly to the projects/ subtree; boundary with todo — todo is the agent's working set of delegated tasks, project.md tasks are the persistent decomposition source of truth"
+inject: "Project container domain projects/<name>/ (workspaces, full agent read/write — versus vault append-only): body and tracking entirely in-folder, self-description project.md (four sections: goal & context / stages / tasks as lines / decisions append-only); wiki side only the declaration page wiki/projects.md (projects block mapping, bidirectional diff against the directories, drift = warning); searches involving project content go directly to the projects/ subtree; boundary with todo — todo is the agent's working set, project.md tasks the persistent source of truth"
 usage:
   - Creating a project: create a directory under `projects/` + the `project.md` self-description (four sections, may start empty), add a line on the declaration page (key = directory name)
   - Task flow: `[ ]`→`[x]` inside the self-description leaves the completion trace (lines never deleted); stage checkboxes likewise

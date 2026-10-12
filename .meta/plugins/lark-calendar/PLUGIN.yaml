@@ -1,5 +1,5 @@
 id: lark-calendar
-version: 0.2
+version: 0.3
 depends:
   - calendar
   - lark
@@ -9,6 +9,7 @@ attachment:
   - "No pages of its own: the source syntax (values of the declaration page `calendar` block mapping) and the pull discipline are the entire output"
 fields: {}
 inject: "lark calendar source (calendar's first adapter): declaration page `calendar` block mapping value = `lark/<profile> <calendar_id|primary>` (the profile must be an active directory under wiki/lark/); pull with `lark-cli --profile <name> calendar …` (instance_view current/next-month window); writes only the month pages' `## Schedule` section, source key at line end; never touches the journal section or already-frozen month pages; daily refresh cadence = a task page registered via the cron bridge (form: session, registration/replay/reconciliation discipline in the cron plugin, failing sources report to the log without blocking other sources)"
+inject_tier: member
 usage:
   - Onboarding: add a source on the declaration page (key = short name, value = `lark/<profile> <calendar_id|primary>`) → pull the current / next month once → rewrite the schedule section wholesale → verify + log
   - Daily unattended refresh: the task page lands in wiki/cron/ (form: session, domain: lark-calendar) — replay recipe and failure discipline in the cron plugin; semantic enrichment (remarks, link completion) stays in interactive sessions

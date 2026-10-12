@@ -1,5 +1,5 @@
 id: lark-docs
-version: 0.1
+version: 0.2
 depends:
   - lark
 updated: 2026-10-06
@@ -8,6 +8,7 @@ attachment:
 fields:
   docs: "block mapping (docs.md hub) — area-of-interest name → one-sentence scope (knowledge space name / drive directory / specific object, resolved by the agent via lark-cli); area of interest = the directory segment of pointer pages"
 inject: "Cloud-docs domain (serving the profile abstraction): per profile a hub page `<profile>/docs.md` (kind: docs) — frontmatter `docs` block mapping = area of interest → one-sentence scope (instance configuration), body 'drive structure digest' (distillation not a mirror, governed by stale_after); pointer pages land in `<profile>/docs/<area-of-interest>/`, kind follows lark obj_type (docx/wiki/sheet/base/file… open vocabulary); full mapping forbidden — enumeration serves only the digest and area-of-interest resolution; snapshot section `## Snapshot YYYY-MM-DD` appends selected excerpts, full-text copying forbidden; TTL default 7 days (overridable in profile.md)"
+inject_tier: member
 usage:
   - Adding/changing an area of interest: edit the `docs` block mapping of `docs.md` (one-sentence scope: knowledge space name / drive directory / specific object), lark-map or the agent enumerates per area and lands pointer pages; the area of interest is the directory segment of pointer pages
   - Structure digest: the wiki-space list + top-level drive tree distilled onto one screen (agent product), stale_after reset on each pull; no pursuit of real-time parity with the lark side

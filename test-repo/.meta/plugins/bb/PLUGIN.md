@@ -31,7 +31,10 @@
 
 ## Changelog
 
-- 0.10 (2026-10-07): map-first workflow — every course task (teach/quiz/track/review/Q&A) runs only after the course is fully mapped (bb-map) and bases directly on the mapped territory; AGENTS principle 13
+- 0.11 (2026-10-07): map-first workflow — every course task (teach/quiz/track/review/Q&A) runs only after the course is fully mapped (bb-map) and bases directly on the mapped territory; AGENTS principle 13 (PR #23, renumbered past master's 0.10 inject_tier entry)
+- 0.10 (2026-10-06) inject_tier: member — exits the AGENTS.md injection region per the issue #12 layer discipline (exposure: family-root roster line + skill catalog + on-demand manifest reads)
+
+- 0.10 (2026-10-07) [superseded numbering, see 0.11]: map-first workflow — every course task (teach/quiz/track/review/Q&A) runs only after the course is fully mapped (bb-map) and bases directly on the mapped territory; AGENTS principle 13
 - 0.9 (2026-10-05) fix: the double-path typo in migration replacement wiki/cuhksz/cuhksz/bb/ → wiki/cuhksz/bb/ (first reported on the instance side; the spec's single layer prevails)
 
 - 0.8 (2026-10-05) domain migration: BB demoted from an independent domain to an in-domain subsystem family of cuhksz (owner ruling — bb/sis/registry share one school and one authentication, one domain); depends gains cuhksz, territory wiki/bb/ → wiki/cuhksz/bb/, workspace bb/ → cuhksz/bb/, contract and in-family structure unchanged

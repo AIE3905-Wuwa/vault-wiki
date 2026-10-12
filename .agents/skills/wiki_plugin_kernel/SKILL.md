@@ -31,8 +31,8 @@ description: "Kernel and mechanics reference: the projector's seven subcommands 
 ## Plugin shape
 
 - **One plugin, one directory** (`.meta/plugins/<id>/`): `PLUGIN.yaml` (the manifest, the machine-readable body) + `PLUGIN.md` (pure documentation: design summary (why / family position / key rulings and rejected alternatives) / Structure / Invariants / Changelog — **design rationale and per-plugin details belong here**; mechanics commonalities belong to this reference) + optional `scripts/check.py` (attached audit)
-- **Manifest keys**: seven required keys `id / version / depends / updated / attachment / fields / inject`; optional `commands` (command names this plugin drives), `usage` (write-side contract list — the third projection source), `checks` (check-rule list — the check projection source), `bridge` (bridge declaration, see bridge rules)
-- **attachment** = declares territory and borrow-read relationships (who owns which paths, who read-only consumes whose pages); **fields** = owned page fields (enter the registry, the global vocabulary); **inject** = one injection-region line (constitutional-level disclosure, known to the agent the moment it enters the repository)
+- **Manifest keys**: seven required keys `id / version / depends / updated / attachment / fields / inject`; optional `commands` (command names this plugin drives), `usage` (write-side contract list — the third projection source), `checks` (check-rule list — the check projection source), `bridge` (bridge declaration, see bridge rules), `inject_tier` (injection tier, see tier law below)
+- **attachment** = declares territory and borrow-read relationships (who owns which paths, who read-only consumes whose pages); **fields** = owned page fields (enter the registry, the global vocabulary); **inject** = the plugin's disclosure, one line (the full-disclosure home in the manifest either way; known to the agent the moment it enters the repository when tier is full, read on demand when tier is member)
 - **Attached-audit contract**: `scripts/check.py` defines `check(ctx)` returning `[{level, message}]`; read-only with zero side effects; fixes belong to commands/humans; an AST static check validates the contract's shape
 
 ## Dependency mechanics
@@ -41,6 +41,12 @@ description: "Kernel and mechanics reference: the projector's seven subcommands 
 - **Domain plugins** = those whose depends chain reaches `domain`; those directly depending on domain are **domain bases** (vault / lark / project / email / bb). In-domain plugins belong to the domain transitively and need not connect to domain directly
 - **Injection order = dependency topology (the depended-on injected first) + alphabetical within a batch** — consumer-side plugins are injected after the producers' disclosures are present (e.g. bb-track before bb-teach / bb-quiz); there is no layering concept
 - A domain must be discoverable within the wiki (declaration page or injection line); domain plugins create no root container — course/in-domain artifacts live in the domain territory (both sides `<term>/<course>/` isomorphic), with the general-purpose container (vault) or pointers as the default posture
+
+## Tier law (issue #12 layer discipline)
+
+- **`inject_tier: full | member`** (optional, default full): **full** projects into the AGENTS.md injection region; **member** exits it — exposure rides on the family root's roster line (every member named with id + one phrase), the skill catalog (trigger-surface awareness), and L-layer reads (the manifest `inject` field stays the full-disclosure home either way)
+- Validate requires a member to reach a **full-tier domain root** through depends (family membership, else it exits into invisibility)
+- The projected plugin blocks carry a **byte budget** (15 KiB, derived from the smallest mainstream whole-file AGENTS.md cap minus handwritten allowance): over-budget is a validate error — compress pointer lines or re-tier domain members; the A layer holds pointers and red lines only, never procedures or formats (content contract in `protocol/experiments.md`)
 
 ## Command-plugin binding
 
@@ -54,7 +60,7 @@ description: "Kernel and mechanics reference: the projector's seven subcommands 
 ## Projection mechanics (three projections, one source)
 
 - **The manifest is the only text source**; the kernel mechanically projects into three places, all idempotently rebuilt and auto-synced on (un)install:
-  1. **The AGENTS.md injection region** (`wiki-inject:start/end` marker blocks) ← the `inject` line — constitutional level, one block per plugin
+  1. **The AGENTS.md injection region** (`wiki-inject:start/end` marker blocks) ← the `inject` line — constitutional level, one block per full-tier plugin (member tier exits, see the tier law)
   2. **The check check blocks** (`check-inject:start/end` inside the check command) ← the `checks` list — semantic-item check rules
   3. **The command usage blocks** (`cmd-inject:start/end` inside each command) ← the `usage` list in consumes order — write-side contracts
 - A fourth mechanical projection: the **registry.yaml plugin section** ← `fields` (the global field vocabulary); a fifth: the **skill copies** (deploy)

@@ -28,6 +28,6 @@ A derivation-destination bridge governing action items: domain plugins one-way d
 
 ## Changelog
 
-- 0.3 2026-10-02: global-domain batch two — established the on-demand bridge as the derivation destination; domain-plugin self-descriptions retained with a pointer
+- 0.4 (2026-10-06) inject line compressed to pointer density (issue #12 layer discipline) — procedural detail lives in usage / PLUGIN.md / skills- 0.3 2026-10-02: global-domain batch two — established the on-demand bridge as the derivation destination; domain-plugin self-descriptions retained with a pointer
 - 0.2 2026-10-02: added 'create on absence' — when a new session's first read finds todo.md absent, it creates an empty page, so the entry discipline never falls through; guideline registration entry revised, empirically verified
 - 0.1 2026-09-14: established — the `wiki/todo.md` delegation queue, type: todo entered the registry territory values; settlement history goes to log, the log type value set extended with todo; no attached command — the write contract travels with the injection line

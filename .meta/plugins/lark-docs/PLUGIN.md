@@ -24,4 +24,6 @@
 
 ## Changelog
 
+- 0.2 (2026-10-06) inject_tier: member — exits the AGENTS.md injection region per the issue #12 layer discipline (exposure: family-root roster line + skill catalog + on-demand manifest reads)
+
 - 0.1 2026-09-19: established — the docs.md three-piece set: structure digest, areas of interest, per-area mapping

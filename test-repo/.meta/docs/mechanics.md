@@ -16,7 +16,7 @@ Each plugin is one directory, living at `.meta/plugins/<id>/`. `PLUGIN.yaml` is 
 
 The key property is idempotent rebuilding. Hand-editing inside marker blocks is forbidden — a rebuild overwrites; prose outside the blocks belongs to humans. There is no second source of truth: changing a rule means changing the manifest, after which the single command `all` converges everything. The whole class of documentation-drift problems is eliminated wholesale — projections and the body cannot disagree, because they are not two separate things.
 
-Walk through one real sample. In bb-quiz's manifest, `inject:` is a single Chinese line stating what the quiz self-test does and where its products land. After `all` runs, that line appears verbatim in the AGENTS injection region inside the `<!-- plugin:bb-quiz v0.2 -->` block. What agents read day to day is the projection; the manifest body is touched only when (un)installing plugins.
+Walk through one real sample. In bb-quiz's manifest, `inject:` is a single one-line disclosure stating what the quiz self-test does and where its products land. After `all` runs, that line appears verbatim in the AGENTS injection region inside the `<!-- plugin:bb-quiz v0.2 -->` block. What agents read day to day is the projection; the manifest body is touched only when (un)installing plugins.
 
 ## 1. Plugin Shape
 
@@ -37,6 +37,8 @@ Seven required manifest keys, illustrated with real values from bb-quiz v0.2:
 | `inject` | The source of the injection-region line; constitution-level disclosure | see the AGENTS bb-quiz block |
 
 Four optional keys. `commands` declares the commands this plugin drives; `usage` is the write-side rule list; `checks` is the inspection rules; `bridge` is the bridge declaration, which only global pieces may hold.
+
+A fifth optional key `inject_tier` (full|member, default full) carries the **tier law** (issue #12 layer discipline): member exits the AGENTS injection region — exposure rides on the family root's roster line, the skill catalog, and on-demand reads of the manifest, and validate requires a member to reach a full-tier domain root through depends. The projected region carries a byte budget (15 KiB), keeping the A layer pointer-dense: pointers and red lines, never procedures or formats (contract in `protocol/experiments.md`).
 
 attachment deserves a closer look. bb-quiz declares three entries:
 

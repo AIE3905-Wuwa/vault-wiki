@@ -23,3 +23,18 @@ The first four links are a static availability ordering; all actual reading happ
 ## Validate by use (since 2026-09-12)
 
 Whether a change works is judged by real-use feedback: friction points (guessing formats, missed steps, repeatedly explaining the same thing) are spec voids; fix one spot, use one spot—no matrix thresholds.
+
+## Layer content & capacity discipline (2026-10-06, issue #12)
+
+Supplement distilled from the inject-region overrun incident (instance AGENTS.md at 39 KB, 97% injection region, silently truncated on four of five mainstream harnesses). SASU-L ordered *when* each channel becomes available but never stated *what each layer may carry and how much*—so the one channel with no norm, the A-layer injection region, became the dumping ground. The paradigm's own empirical rule had already located the fix: behavioral divergence points sit where rules are absent from the **execution site**—and the execution site is L (skill bodies, pages, anchors read at the moment of use), not A. A is the constitution, not the execution site.
+
+**Content contract—what each layer stores:**
+
+- **A (AGENTS.md)**—task-independent orientation only: identity and positioning, principles, the structural map (top-level layout, territory roots), red lines, entry pointers. Injection projections are **pointer-dense, not disclosure-complete**: a plugin's line states what it is, where its territory sits, its red lines, and where the full disclosure lives. Procedures, formats, field semantics and per-plugin mechanisms are **forbidden in A**—they belong to S or L.
+- **S (skills)**—the capability surface. Descriptions are one-line trigger surfaces (the skill catalog is also always-on session context—the same tax as A, so the same leanness applies). Bodies carry the procedures and the constitutional constraints that travel with the operation (append-only, no-regeneration zones): a skill may be slimmed, never below its constitutional clauses.
+- **U (user prompt)**—task semantics only; the purity rule above stands.
+- **L (loop)**—the full-disclosure home: plugin manifests (the `inject` field stays the single source of a plugin's disclosure text whether or not it projects into A), PLUGIN.md design docs, wiki declaration pages, precedent pages—read at the moment of use.
+
+**One home per fact.** The same disclosure is not carried in parallel across layers (inject region ↔ PLUGIN.md ↔ skill body): with three copies, one silently rots. Each fact is stated once, in the layer the contract assigns; the other layers hold pointers to it.
+
+**Capacity is structural, not disciplinary.** The kernel enforces a byte budget on the projected injection region (manifest `inject_tier`: `full` projects, `member` exits; a member must reach a full-tier domain root through depends—validate checks, else it exits into invisibility). **Exposure ladder for exited members**: the family root's line must name every member (id + one phrase—the roster floor for members with no skill surface), the skill catalog carries trigger-surface awareness, and L-layer reads resolve the full contract on demand. Overrun blocks mechanical actions (a validate error since the 2026-10-06 tier migration landed the region at ~13.5 KB against the 15 KiB budget).

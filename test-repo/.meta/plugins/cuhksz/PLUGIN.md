@@ -25,5 +25,5 @@
 
 ## Changelog
 
-- 0.2 (2026-10-05) personal official documents materialized in-domain instead (cuhksz/sis/, owner ruling): the landing criterion fixed as 'when a domain has its own self-standing container, materialization lands in-domain; vault is the fallback for containerless domains'
+- 0.3 (2026-10-06) inject line compressed to pointer density (issue #12 layer discipline) (family roster duty added) — procedural detail lives in usage / PLUGIN.md / skills- 0.2 (2026-10-05) personal official documents materialized in-domain instead (cuhksz/sis/, owner ruling): the landing criterion fixed as 'when a domain has its own self-standing container, materialization lands in-domain; vault is the fallback for containerless domains'
 - 0.1 (2026-10-05) established: domain base; the bb family's five plugins attached and migrated in (wiki/bb/ → wiki/cuhksz/bb/, bb/ → cuhksz/bb/); sis/registry subdomains first established

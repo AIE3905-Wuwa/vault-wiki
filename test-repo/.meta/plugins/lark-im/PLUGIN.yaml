@@ -1,5 +1,5 @@
 id: lark-im
-version: 0.1
+version: 0.2
 depends:
   - lark
 updated: 2026-10-06
@@ -12,6 +12,7 @@ fields:
   position: "scalar (person archive) — position, filled by contact resolution"
   chat_id: "scalar (person archive) — p2p chat chat_id anchor (entry point for pulling messages, absent when no p2p chat)"
 inject: "Interpersonal domain (archive pages, base partitioning): hub `<profile>/im.md` (`im` block mapping = policies: group-sync / emergence / watch / exclude); group archives `<profile>/im/chats/` (kind: chat — `description` group purpose + `key_members` key people as wikilinks, body accumulation section = topic records `## date topic→result` append-only, on-demand pull-window distillation appended after confirmation); person archives `<profile>/im/people/` (kind: person, token = open_id, department/position resolved via contact, chat_id as the p2p anchor, body accumulation section = relationship with me, append-only converging); person archives emergence-based (p2p / named by the user / high frequency, conditions written in the hub) — no full address book built (contact resolves, never traverses); group participants store only key people, never the full roster; filename sanitization + duplicate-name token suffix; send-type write operations always require explicit user request; privacy red line: subjective relationship content never enters the framework repo or test-repo; trust lazy-refresh same as the base"
+inject_tier: member
 usage:
   - Building group archives (lark-map reconciliation): `im +chat-list` full enumeration → token↔page diff → create (group-purpose description distillation + key_members starting from the owner) / update the mechanical section / a left group marked deprecated
   - Building person archives (emergence, hand-created when a hub condition hits): contact resolution fills department / position; p2p present → fill the chat_id anchor; the relationship section starts blank

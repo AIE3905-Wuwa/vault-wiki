@@ -21,5 +21,7 @@
 
 ## Changelog
 
+- 0.3 (2026-10-06) inject_tier: member — exits the AGENTS.md injection region per the issue #12 layer discipline (exposure: family-root roster line + skill catalog + on-demand manifest reads)
+
 - 0.2 2026-10-06: attach the cron bridge — the daily-refresh disclosure reworded to task-page registration (form: session), depends adds cron
 - 0.1 2026-09-19: established — the lark calendar source joins calendar, the first source adapter; daily refresh = deployment-side cron-scheduled unattended sessions

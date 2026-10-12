@@ -27,7 +27,7 @@
 
 ## Changelog
 
-- 0.4 2026-10-02: global-domain batch one — attach the mandatory log bridge edge; constitution principle 11, kernel verifies completeness
+- 0.5 (2026-10-06) inject line compressed to pointer density (issue #12 layer discipline) (family roster duty added) — procedural detail lives in usage / PLUGIN.md / skills- 0.4 2026-10-02: global-domain batch one — attach the mandatory log bridge edge; constitution principle 11, kernel verifies completeness
 - 0.3 2026-09-22: domainization — depends adds domain; external-domain-base positioning means pointers land without materialization; territory conventions unchanged; contract in the domain plugin
 - 0.2 2026-09-19: establish the two-form partitioning of archive pages — frontmatter mechanical section, body accumulation section append-only; the architectural premise for the im domain's archive pages; pointer page semantics unchanged
 - 0.1 2026-09-19: established — four rounds of design convergence: pointer-only, abandoning vault storage; profile-first segmentation; trust lazy refresh replacing the daemon; base and domain plugins split into families with the base owning the abstraction, domain plugins serving in parallel

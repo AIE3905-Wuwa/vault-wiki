@@ -1,12 +1,12 @@
 id: tmp
-version: 0.1
+version: 0.3
 depends:
   - wiki
 updated: 2026-10-06
 attachment:
   - "wiki/tmp/ — temporary zone (the path is the territory; instance data — real contents never enter the framework repo or test-repo)"
 fields: {}
-inject: "Temporary zone `wiki/tmp/` (the path is the territory; type: tmp optional — landing outside the territory → error): home for drafts and parsing intermediates, no retention promise, cleanable at any time; invisible to the derived layer — excluded from index/tags, never a link source, broken links exempt (a draft's broken link = not yet written down, closed upon promotion); promote precious drafts promptly (save → notes / merged into a project decision section), the draft deleted upon promotion; parsing intermediates set stale_after as they go, check reports the over-age list and disposal goes through confirmation (no automatic deletion); sensitive intermediates are best gitignored from this directory at the instance level"
+inject: "Temporary zone `wiki/tmp/` (the path is the territory; type: tmp optional, landing outside → error): drafts and parsing intermediates, no retention promise, cleanable any time; invisible to the derived layer — excluded from index/tags, never a link source, broken links exempt; promote precious drafts promptly (draft deleted on promotion); intermediates set stale_after as they go — check reports over-age, disposal via confirmation (no automatic deletion); sensitive intermediates best gitignored instance-side"
 usage:
   - Drafts / parsing scratch: land directly at `wiki/tmp/<name>.md`, frontmatter kept simple (title + optional stale_after); broken links may stay as written
   - Promotion: content distilled via save into notes or merged into the target territory (a project decision section, etc.); delete the draft after the links close (agent-created drafts deleted by the agent; human drafts upon confirmation)

@@ -26,5 +26,7 @@
 
 ## Changelog
 
+- 0.3 (2026-10-06) inject_tier: member — exits the AGENTS.md injection region per the issue #12 layer discipline (exposure: family-root roster line + skill catalog + on-demand manifest reads)
+
 - 0.2 (2026-10-05) official personal documents switched to in-domain materialization (cuhksz/sis/ + the territory's docs/ proxy pages, owner-ruling revision — the old vault route was inertia from the device containerless precedent)
 - 0.1 (2026-10-05) established: first established with the cuhksz domain; the sis-cli v0.2 connector present beforehand

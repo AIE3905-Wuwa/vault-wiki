@@ -1,5 +1,5 @@
 id: registry
-version: 0.1
+version: 0.2
 depends:
   - cuhksz
   - domain
@@ -13,6 +13,7 @@ attachment:
 fields:
   registry: "block mapping (index/proxy pages) — source (official page URL) / edition (version anchor: admission-cohort batch + document/Senate number, e.g. AB2025_C037) / raw_file / raw_sha256"
 inject: "Academic regulations subdomain (external source registry.cuhk.edu.cn, the Registry's official site, **no connector** — manual downloads after explicit user instruction, semi-automatic materialization): materialization zone `cuhksz/registry/` (official-site PDFs append-only, version batches advance, never overwritten) + territory `wiki/cuhksz/registry/` — the index page schemes.md (university-wide college → major → scheme page URL pointers; page-creation sources: the undergraduate major list registry.cuhk.edu.cn/page/20 and the undergraduate handbook /page/22 family, covering double majors/joint programmes/minors; human-machine co-maintained, public-institution navigation) and proxy pages (raw_file/raw_sha256 + key-point distillation append-only + version cross-check records); **cross-check cadence** = manual verification at semester start and on Senate document days (pages carry no dates, spot-check by PDF Last-Modified); institutional cross-checking is dual-source — this zone's rule PDFs are the institutional source, the sis-cli Degree Progress Report (DPR) the dynamic source, cross-check conclusions emerging into notes with backlinks; trust human-reviewed (manual verification) + version anchors, no TTL (institutional change is caught by cross-checking, not by expiry); discontinued majors (e.g. Electronic Information Engineering 2015-2021) honestly annotated, never deleted"
+inject_tier: member
 usage:
   - Index page creation/maintenance: from the registry.cuhk.edu.cn undergraduate major list (/page/20 Chinese, /en/page/20 English), list majors per college (Chinese-English names + years offered) with scheme page URLs; additions and removals honestly annotated as majors are introduced or discontinued
   - Materialization: PDFs specified by the user or discovered during cross-checking are downloaded to cuhksz/registry/<original-name>.pdf (download after explicit user instruction) + a proxy page is created (registry block mapping source/edition/raw_file/raw_sha256 + key-point distillation)

@@ -32,7 +32,7 @@
 
 ## Changelog
 
-- 0.4 2026-10-06: attach the cron bridge — the optional daily-refresh disclosure reworded to task-page registration (form: session), depends adds cron
+- 0.5 (2026-10-06) inject line compressed to pointer density (issue #12 layer discipline) (family roster duty added) — procedural detail lives in usage / PLUGIN.md / skills- 0.4 2026-10-06: attach the cron bridge — the optional daily-refresh disclosure reworded to task-page registration (form: session), depends adds cron
 - 0.3 2026-10-02: global-domain batch two — derivation sentences gain bridge pointers
 - 0.2 2026-10-02: global-domain batch one — attach the mandatory log bridge edge; constitution principle 11, kernel verifies completeness
 - 0.1 2026-09-29: established — declaration first, the user ruled establish first verify later; no command no adapter, calendar form, the contract lives in manifest usage; connector experiments follow — server-side search capability and thread-header integrity will write back mechanical-section field shapes, e.g. fallback-clustering soft fields

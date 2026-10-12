@@ -1,5 +1,5 @@
 id: user-profile
-version: 0.4
+version: 0.6
 bridge: 按需
 depends:
   - wiki
@@ -11,7 +11,7 @@ attachment:
 fields: {}
 commands:
   - profile
-inject: "User profile `wiki/profile.md` (type: profile): a continuing cognition profile of the user, static identity layer + dynamic preference layer, dimensions not enumerated; convergence-style updates — new values replace old, trace left in the body; assertions must carry evidence wikilinks (any page inside wiki works: session pages, vault proxy pages, lark archive pages), the preference layer carries stale_after; zero own fields, reuses trust; not part of the notes territory, no tags (a single page read directly, not in vocabulary retrieval); updates go through the profile command — dual-track triggering (explicit user request / the agent's spontaneous call upon recognizing significant signals), first trigger self-creates the page; read this page before personalized decisions (form of address, style, preferences); cognition bridge (on-demand, constitutional principle 11) — domain cognition pages register via the `## Domain Cognition` section of the profile body (line = domain name + path-form wikilink, e.g. bb-track user.md); the profile only aggregates pointers, never copying domain state; read the profile and its registered cognition pages before personalized output; the bridge holds only 'who is present, where to read' — cognition page shape belongs to the domain plugins"
+inject: "User profile wiki/profile.md (type: profile): continuing cognition of the user, static identity + dynamic preference layers, dimensions open; convergence-style updates (new replaces old, trace in body), assertions carry evidence wikilinks, preference layer stale_after; zero own fields, reuses trust; not in the notes territory, no tags; updates via the profile command (dual-track trigger, self-creates on first); read before personalized decisions; cognition bridge — domain cognition pages register one line each in ## Domain Cognition, the profile aggregates pointers only"
 usage:
   - Dual-track triggering: the user explicitly invokes profile; the agent calls it spontaneously in any session upon recognizing significant signals — signal distillation uniformly goes through this command, not parasitic on other command flows
   - Signal criteria: self-reported signals (preference expressions, corrections, background) and behavioral signals (subjects, fields, material habits); record only recurring subjects/fields, explicit preference expressions, corrections to output, and stable background facts (identity/tools/environment); one-off and instrumental content and uncertain observations are not recorded

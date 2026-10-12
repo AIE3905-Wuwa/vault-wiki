@@ -16,7 +16,7 @@ Read: all manifests, `.meta/scripts/wiki_plugin_kernel.py`
 ## Install <id>
 
 1. Prepare `.meta/plugins/<id>/`:
-   - PLUGIN.yaml: seven required fields id / version / depends / updated / attachment / fields / inject (`inject` is the injection-region projection line, one line in Chinese) + optional commands (the commands this plugin drives) / usage / checks (block-style lists: the projection sources of write-side contracts and check rules) / usage_routes (additional commands the usage lands in, source-side routing — installing a plugin lands its projections)
+   - PLUGIN.yaml: seven required fields id / version / depends / updated / attachment / fields / inject (`inject` is the plugin's one-line disclosure — the injection-region projection when tier is full) + optional commands (the commands this plugin drives) / usage / checks (block-style lists: the projection sources of write-side contracts and check rules) / usage_routes (additional commands the usage lands in, source-side routing — installing a plugin lands its projections) / inject_tier (full|member, default full — member exits the injection region, riding on the family root's roster line + skills + L-layer reads; domain family members set this, see the kernel reference tier law)
    - PLUGIN.md structure: design summary (why it exists / position in the family / key rulings including rejected alternatives / mechanics back-references) → Structure → Invariants → Changelog (pure documentation; all injection sources live in the manifest)
 2. `python .meta/scripts/wiki_plugin_kernel.py validate` — compliance and dependency checks; errors block
 3. `python .meta/scripts/wiki_plugin_kernel.py all` — injection region / registry / command-copy sync

@@ -1,5 +1,5 @@
 id: todo
-version: 0.3
+version: 0.4
 bridge: 按需
 depends:
   - wiki
@@ -8,7 +8,7 @@ updated: 2026-10-06
 attachment:
   - "wiki/todo.md — temporary memory page (cross-session delegation queue)"
 fields: {}
-inject: "Temporary memory `wiki/todo.md` (type: todo): cross-session delegations and reminders; an entry = trigger condition (date or context) + one sentence + by/at; read this page first at the start of a new session (before hot; if absent, create an empty page); entries whose date has arrived or passed are proactively raised with the user; append upon delegation, settle upon completion (`[x]` plus a log line — history goes to log); settled entries capped at 20, silently cleaned beyond the cap; this page keeps only the live working set; todo on-demand bridge — domain plugins one-way derive action items into this page (constitutional principle 11, format owned by this bridge)"
+inject: "Temporary memory wiki/todo.md (type: todo): cross-session delegations and reminders; entry = trigger condition (date or context) + one sentence + by/at; read first at session start (before hot; absent → create empty); due or past entries raised proactively; append upon delegation, settle upon completion ([x] + log line, history to log); settled capped at 20; live working set only; on-demand bridge — domain plugins one-way derive action items in"
 usage:
   - Append upon delegation: `- [ ] <date YYYY-MM-DD or context phrase>: one sentence (by: <actor>, at: <date>)`; date entries are mechanically scannable, context entries are semantically activated
   - Read this page first at the start of a new session (before hot; if absent, create an empty page): entries with now ≥ trigger day are proactively raised with the user; overdue and unsettled entries keep being raised, marked overdue

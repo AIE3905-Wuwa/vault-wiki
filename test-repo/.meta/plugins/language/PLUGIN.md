@@ -32,6 +32,6 @@
 
 ## Changelog
 
-- 0.3 2026-10-07: audience register — added the `register` canonical key (writing register / audience reading level, default first/second-year undergraduates, AGENTS principle 12), consumed by bb-teach and bb-quiz; a default baseline, not a mandate
-- 0.2 2026-10-04: language neutralization — the absence fallback changed from 'Chinese-first' to 'follow the session language', Chinese demoted to a development-period instance fact; layered ruling: source alignment belongs to domain plugins, reader alignment to this page's canonical keys (the teaching/annotation precedent); same batch as bb-teach/bb-quiz v0.4
+- 0.4 (2026-10-07): register key — the `register` canonical key governs the audience reading level (program default first/second-year undergraduates, AGENTS principle 12), consumed by bb-teach (teaching) / bb-quiz (annotation) / save (PR #23, renumbered past master's 0.3 compression)
+- 0.3 (2026-10-06) inject line compressed to pointer density (issue #12 layer discipline) — procedural detail lives in usage / PLUGIN.md / skills- 0.2 2026-10-04: language neutralization — the absence fallback changed from 'Chinese-first' to 'follow the session language', Chinese demoted to a development-period instance fact; layered ruling: source alignment belongs to domain plugins, reader alignment to this page's canonical keys (the teaching/annotation precedent); same batch as bb-teach/bb-quiz v0.4
 - 0.1 2026-10-04: established — the writing declaration page with two-form partitioning (language/terms block mappings + distillation section), absence tolerance, default-baseline-not-mandate, emergence-based term registry; usage_routes landing on save, first application; depends wiki

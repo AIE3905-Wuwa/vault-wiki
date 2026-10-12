@@ -31,8 +31,10 @@
 
 ## Changelog
 
-- 0.17 (2026-10-07): source citation — raw_path + sm-N are the citation anchors for derived content, every generated claim traces back to its source
-- 0.16 (2026-10-07): map-first prerequisite — bb-map is the prerequisite for all course tasks, full-course mapping runs first; the mapping is their single basis
+- 0.17 (2026-10-07): map-first prerequisite + source citation — bb-map is the prerequisite for all course tasks (full-course mapping runs first; the mapping is their single basis), and raw_path + sm-N are the citation anchors for derived content, every generated claim traces back to its source (PR #23, collapsed past master's 0.16 inject_tier entry)
+- 0.16 (2026-10-06) inject_tier: member — exits the AGENTS.md injection region per the issue #12 layer discipline (exposure: family-root roster line + skill catalog + on-demand manifest reads)
+
+
 - 0.15 (2026-10-05) fix: the double-path typo in migration replacement wiki/cuhksz/cuhksz/bb/ → wiki/cuhksz/bb/ (first reported on the instance side; the spec's single layer prevails)
 
 - 0.14 (2026-10-05) cuhksz domain migration: paths rewritten (wiki/cuhksz/bb/, cuhksz/bb/), rules unchanged

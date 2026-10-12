@@ -1,5 +1,5 @@
 id: bb-quiz
-version: 0.9
+version: 0.8
 depends:
   - bb-track
   - bb-map
@@ -15,6 +15,7 @@ attachment:
 fields:
   quiz: "block mapping (paper page) — course (course code) / scope (question scope) / difficulty_median (difficulty median 1-5, cognitive levels) / types (question-type list, open vocabulary) / source (sample|assignment|habit) / answer_of (answers page backlinking the questions file name)"
 inject: "Self-test generation bb-quiz (bb-track's testing consumer): step 0: ensure the course is fully mapped (bb-map); the user specifies a scope + optional sample → generate questions (types and difficulty median aligned to the sample; without a sample fall back to known assignments, then to user habits; question-stem language source-aligned — following the sample/known assignments/course materials) + explanations (language reader-aligned — take the annotation key of the language declaration page `wiki/language.md`, page or key absent → session language; the register — audience reading level — defaults to first/second-year undergraduates: intuition before formalism, one concept per step, a concrete example, each term explained at first use, plain prose; each question marked with its sm-N knowledge point and citing its source (courseware/textbook) via the mapping's raw_path); the full knowledge-point set = courseware sm-N, the scope = the user-specified subset, no out-of-scope (unless the user says so); question selection and difficulty distribution follow bb-track proficiency/goal layer/wrong answers (stale → conservative tier; cold start → uniform coverage over all-unanchored), teaching minutes (notes/ ai notes) read best-effort on demand; papers land at cuhksz/bb/<term>/<course>/notes/testing/<name>-questions.md + -answers.md (origin: ai, append-only); grading (after answering) = the answers page appends `## Grading` + write-back into user.md's evidence stream after confirmation (machine self-test); post-write log line (other --domain bb) + verify"
+inject_tier: member
 usage:
   - "Map-first: step 0 = ensure the course is fully mapped (bb-map full); questions and explanations base directly on the mapped sm-N + the `## Terminology` glossary, never on raw source or ad-hoc reading"
   - "Parse input: scope (chapter/unit/sm-N list) + sample (optional); the course is located via the bb directory structure (<term>/<course>, the active term may be omitted)"

@@ -1,5 +1,5 @@
 id: sis
-version: 0.2
+version: 0.3
 depends:
   - cuhksz
   - domain
@@ -13,6 +13,7 @@ attachment:
 fields:
   sis_inbox: "block mapping (optional on the digest page) — term (active term name) / ttl (TTL override, days); absent → default"
 inject: "Student records subdomain `wiki/cuhksz/sis/` (external source sis.cuhk.edu.cn, Oracle PeopleSoft CS, connector sis-cli purely read-only, usage and command surface in connectors/sis-cli/SKILL.md): digest page inbox.md (recent-window distillation — this term's schedule overview/registration windows/holds/latest grade snapshot, rows tagged with term, whole page regenerable with short TTL default 1 day, **created when absent**); **query-and-answer, no default projection** — grades/history/schedule/exams answered from a fresh pull (term interaction and the read-only red line in the sis-cli skill), high-value conclusions emerge into notes with backlinks; one-way derivation (out-only): registration windows nearing → todo, schedule/exam arrangements → calendar schedule rows (filling the schedule source bb lacks), term grades (terminal facts) → bb-track evidence stream (intra-domain direct reference, bridge-exempt, after user confirmation); personal official PDFs (certificate of enrollment/unofficial transcript) downloaded after explicit user instruction land in `cuhksz/sis/` as in-domain materialization + a territory proxy page (when a domain has its own self-standing container, materialization lands in-domain; vault is only the fallback for containerless domains); write operations such as official transcript requests **never enter this domain** (real enrollment consequences); trust ceiling machine-confirmed, stale_after = pull date + TTL (date granularity), the agent is the synchronizer"
+inject_tier: member
 usage:
   - Enter the domain by first reading wiki/cuhksz/sis/inbox.md (created when absent: fresh-pull sis-cli grades/appt/schedule, distill and rewrite the digest + a log line); staleness follows the same flow (the agent is the synchronizer)
   - Query via the sis-cli skill: grades (--term term substring) / history / schedule (--days weekday scoping) / registration windows / exam arrangements; sessions are minute-scale and short-lived, commands auto-relogin, no manual login needed (credentials via environment variables or ~/.sis-cli/)

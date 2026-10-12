@@ -27,6 +27,15 @@ Dependencies and injection order:
 - injection order = dependency topology (dependees injected first) + alphabetical within
   the same batch; no layering concept
 
+Injection tier and budget (issue #12 layer discipline, see protocol/experiments.md):
+- optional manifest field inject_tier (full|member, default full) — member exits the AGENTS.md
+  injection region; exposure rides on the family root's roster line, the skill catalog, and
+  L-layer reads (the manifest inject field stays the full-disclosure home either way)
+- validate requires a member to reach a full-tier domain root through depends (family
+  membership, else it exits into invisibility)
+- the projected plugin blocks carry a byte budget (INJECT_BUDGET): over-budget is a validate
+  error (compress pointer lines or re-tier domain members) the region under budget
+
 Command-plugin binding (mutual declaration, validate checks consistency):
 - command frontmatter adds owner: plugin id (multiple as an [a, b] list) or framework
   (cross-cutting, explicitly ownerless)
@@ -94,6 +103,12 @@ CHECK_INJECT_START = "<!-- check-inject:start -->"
 CHECK_INJECT_END = "<!-- check-inject:end -->"
 CMD_INJECT_START = "<!-- cmd-inject:start -->"
 CMD_INJECT_END = "<!-- cmd-inject:end -->"
+# tier law (issue #12 layer discipline): full projects into AGENTS.md, member exits the injection
+# region — exposure rides on the family root's roster line, the skill catalog, and L-layer reads
+INJECT_TIERS = ("full", "member")
+# injection budget on the projected plugin blocks: smallest mainstream whole-file AGENTS.md cap
+# (Devin 16 KiB) minus ~1 KiB instance handwritten allowance; over-budget is a validate error
+INJECT_BUDGET = 15 * 1024
 
 
 def ordered_plugins(plugins):
@@ -123,7 +138,15 @@ def strip_quotes(s):
 
 
 def strip_comment(s):
-    """Strip inline comments (from ` #` on); quote the whole value first if it contains #."""
+    """Strip inline comments (from ` #` on) — a quoted value is protected up to its closing quote.
+
+    The manifest contract says "quote the whole value first if it contains #"; this honors it:
+    comment stripping never fires inside the quoted span (e.g. `## Section` names in disclosures).
+    """
+    if s.startswith('"'):
+        end = s.find('"', 1)
+        if end != -1:
+            return s[:end + 1] + strip_comment(s[end + 1:])
     return re.split(r"\s+#", s, maxsplit=1)[0].strip()
 
 
@@ -185,6 +208,39 @@ def load_plugins():
     return plugins, errors
 
 
+def reaches_domain(plugins, pid, seen=None):
+    """Does the depends chain of pid reach the domain concept plugin (domain-piece test, principle 11)?"""
+    seen = set() if seen is None else seen
+    if pid in seen or pid not in plugins:
+        return False
+    seen.add(pid)
+    deps = plugins[pid].get("depends") or []
+    return "domain" in deps or any(reaches_domain(plugins, d, seen) for d in deps)
+
+
+def reaches_plugin(plugins, start, target, seen=None):
+    """Does the depends chain of start reach target (transitive family-membership test)?"""
+    seen = set() if seen is None else seen
+    if start in seen or start not in plugins:
+        return False
+    seen.add(start)
+    deps = plugins[start].get("depends") or []
+    return target in deps or any(reaches_plugin(plugins, d, target, seen) for d in deps)
+
+
+def build_inject_blocks(plugins):
+    """AGENTS.md injection-region plugin blocks with member-tier exits applied; returns (blocks, exited)."""
+    blocks, exited = [], 0
+    for pid in ordered_plugins(plugins):
+        if plugins[pid].get("inject_tier") == "member":
+            exited += 1
+            continue
+        ver = plugins[pid].get("version")
+        line = plugins[pid].get("inject", "")
+        blocks.append(f"<!-- plugin:{pid} v{ver} -->\n- {line}\n<!-- /plugin:{pid} -->")
+    return blocks, exited
+
+
 def validate(plugins, errors):
     """Compliance and dependency checks; errors are appended to errors."""
     for name, m in sorted(plugins.items()):
@@ -202,6 +258,12 @@ def validate(plugins, errors):
             errors.append(f"[error] {name}/: depends must be a list")
         if not m.get("inject"):
             errors.append(f"[error] {name}/: inject (projection line) empty")
+        if m.get("inject_tier") is not None and m["inject_tier"] not in INJECT_TIERS:
+            errors.append(f"[error] {name}/: inject_tier ({m['inject_tier']}) must be full or member")
+        # stray-quote smell (post-parse): a value still carrying a quote edge means unbalanced
+        # quoting — the classic artifact of a clipped value (issue #12 post-migration field report)
+        if isinstance(m.get("inject"), str) and (m["inject"].startswith('"') or m["inject"].endswith('"')):
+            print(f"[warning] {name}/: inject value carries a stray quote (unbalanced quoting — parse artifact or manifest typo)")
         # attached-audit contract (optional): if scripts/check.py exists it must define check(ctx) — checked statically via AST, not executed
         cpath = os.path.join(PLUGINS_DIR, name, "scripts", "check.py")
         if os.path.exists(cpath):
@@ -212,6 +274,18 @@ def validate(plugins, errors):
             else:
                 if not any(isinstance(n, ast.FunctionDef) and n.name == "check" for n in tree.body):
                     errors.append(f"[error] {name}/scripts/check.py: check(ctx) not defined (audit contract)")
+    # tier law (issue #12): member-tier exits are legitimate only inside a family — the depends
+    # chain must reach a full-tier domain root, else the plugin exits into invisibility
+    roots = [p for p in sorted(plugins)
+             if reaches_domain(plugins, p) and plugins[p].get("inject_tier") != "member"]
+    for name, m in sorted(plugins.items()):
+        if m.get("inject_tier") == "member" and not any(reaches_plugin(plugins, name, r) for r in roots):
+            errors.append(f"[error] {name}/: inject_tier member must reach a full-tier domain root through depends")
+    # injection budget (hard since the issue #12 tier migration landed): over-budget blocks mechanical actions
+    blocks, _ = build_inject_blocks(plugins)
+    size = sum(len(b.encode("utf-8")) for b in blocks)
+    if size > INJECT_BUDGET:
+        errors.append(f"[error] projected injection region {size} B over the {INJECT_BUDGET} B budget — compress pointer lines or re-tier domain members (issue #12 layer discipline)")
     # dependency existence
     for name, m in sorted(plugins.items()):
         for dep in m.get("depends") or []:
@@ -323,14 +397,6 @@ def validate_bindings(plugins, errors):
 
 def validate_bridges(plugins, errors):
     """Global/domain piece bridge law (constitution principle 11): bridges are global-piece extension points; must-attach bridges check domain-base dependency completeness."""
-    def reaches_domain(pid, seen=None):
-        seen = set() if seen is None else seen
-        if pid in seen or pid not in plugins:
-            return False
-        seen.add(pid)
-        deps = plugins[pid].get("depends") or []
-        return "domain" in deps or any(reaches_domain(d, seen) for d in deps)
-
     bases = [p for p, m in sorted(plugins.items()) if "domain" in (m.get("depends") or [])]
     for pid, m in sorted(plugins.items()):
         bridge = m.get("bridge")
@@ -339,7 +405,7 @@ def validate_bridges(plugins, errors):
         if bridge not in ("必依", "按需"):
             errors.append(f"[error] {pid}/: bridge ({bridge}) must be 必依 (required) or 按需 (on-demand)")
             continue
-        if reaches_domain(pid):
+        if reaches_domain(plugins, pid):
             errors.append(f"[error] {pid}/: bridge is global-only (depends chain reaches domain)")
             continue
         if bridge == "必依":
@@ -401,11 +467,7 @@ def do_inject(plugins):
     region = m.group(1)
     first = region.find("<!-- plugin:")
     preamble = region[:first].rstrip() if first != -1 else region.rstrip()
-    blocks = []
-    for pid in ordered_plugins(plugins):
-        ver = plugins[pid].get("version")
-        line = plugins[pid].get("inject", "")
-        blocks.append(f"<!-- plugin:{pid} v{ver} -->\n- {line}\n<!-- /plugin:{pid} -->")
+    blocks, exited = build_inject_blocks(plugins)
     new_region = preamble + "\n\n" + "\n\n".join(blocks) + "\n\n"
     if new_region == region:
         print("[inject] region unchanged")
@@ -413,7 +475,8 @@ def do_inject(plugins):
     open(AGENTS_MD, "w", encoding="utf-8", newline="\n").write(
         text[: m.start(1)] + new_region + text[m.end(1):]
     )
-    print(f"[inject] rebuilt ({len(blocks)} plugin blocks)")
+    tail = f", {exited} member-tier exits skipped" if exited else ""
+    print(f"[inject] rebuilt ({len(blocks)} plugin blocks{tail})")
     return True
 
 
@@ -568,8 +631,10 @@ def do_ls(plugins):
     for pid in sorted(plugins):
         deps = ", ".join(plugins[pid].get("depends") or []) or "—"
         cmds = ", ".join(plugins[pid].get("commands") or []) or "—"
-        print(f"  {pid:<10} {plugins[pid].get('version', '?'):<6} deps {deps}; commands {cmds}")
-    print(f"{len(plugins)} plugins (.meta/plugins/; injection order = dependency topo + alphabetical)")
+        tier = "member" if plugins[pid].get("inject_tier") == "member" else "full"
+        size = len(str(plugins[pid].get("inject") or "").encode("utf-8"))
+        print(f"  {pid:<10} {plugins[pid].get('version', '?'):<6} {tier:<6} {size:>5} B  deps {deps}; commands {cmds}")
+    print(f"{len(plugins)} plugins (.meta/plugins/; injection order = dependency topo + alphabetical; inject budget {INJECT_BUDGET} B)")
     # usage routing table: plugin -> landing commands (own + source-side routes + command pulls)
     import wikilib
 
