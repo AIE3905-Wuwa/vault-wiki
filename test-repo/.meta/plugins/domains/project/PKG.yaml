@@ -1,0 +1,12 @@
+schema_version: 1
+id: project
+version: 0.1
+compat: ">= 0.2"
+members: [project]
+connectors: []
+depends: [framework]
+uninstall:
+  retains: [projects/, wiki/projects.md]
+  credentials: []
+  bridges: []
+  processes: []

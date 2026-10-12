@@ -187,17 +187,39 @@ def parse_manifest(path):
     return data
 
 
-def load_plugins():
-    """Read all plugin manifests; returns (plugins, errors)."""
-    plugins, errors = {}, []
-    for name in sorted(os.listdir(PLUGINS_DIR)):
-        pdir = os.path.join(PLUGINS_DIR, name)
+def _plugin_dirs(base):
+    """Yield (plugin_id, dir) across layouts: flat <p>/, core/<p>/, domains/<pkg>/<p>/."""
+    for name in sorted(os.listdir(base)):
+        pdir = os.path.join(base, name)
         if not os.path.isdir(pdir):
             continue
+        if os.path.exists(os.path.join(pdir, "PLUGIN.yaml")):
+            yield name, pdir
+            continue
+        for sub in sorted(os.listdir(pdir)):  # core/<p> or domains/<pkg>
+            sdir = os.path.join(pdir, sub)
+            if not os.path.isdir(sdir):
+                continue
+            if os.path.exists(os.path.join(sdir, "PLUGIN.yaml")):
+                yield sub, sdir
+                continue
+            for sub2 in sorted(os.listdir(sdir)):  # domains/<pkg>/<p>
+                s2dir = os.path.join(sdir, sub2)
+                if os.path.isdir(s2dir) and os.path.exists(os.path.join(s2dir, "PLUGIN.yaml")):
+                    yield sub2, s2dir
+
+
+def load_plugins():
+    """Read all plugin manifests (flat / core/ / domains/<pkg>/ layouts); returns (plugins, errors)."""
+    plugins, errors = {}, []
+    for name, pdir in _plugin_dirs(PLUGINS_DIR):
         yml = os.path.join(pdir, "PLUGIN.yaml")
         md = os.path.join(pdir, "PLUGIN.md")
-        if not os.path.exists(yml) or not os.path.exists(md):
+        if not os.path.exists(md):
             errors.append(f"[error] {name}/: PLUGIN.yaml or PLUGIN.md missing")
+            continue
+        if name in plugins:
+            errors.append(f"[error] {name}/: duplicate plugin id (two layouts declare it)")
             continue
         try:
             m = parse_manifest(yml)

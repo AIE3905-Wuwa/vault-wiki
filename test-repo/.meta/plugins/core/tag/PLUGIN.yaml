@@ -1,0 +1,18 @@
+id: tag
+schema_version: 1
+version: 0.11
+depends:
+  - wiki
+updated: 2026-10-06
+attachment:
+  - "Cross-cutting plugin: owns the frontmatter tags field across all pages plus vocabulary governance"
+  - "scripts/check.py — attached audit (>5 per page / restating type / hierarchy depth)"
+fields:
+  tags: "YAML list ≤5; primary language follows the language page's default key (absent → session language); English tags lowercase kebab-case; hierarchy ≤2, `/` separated; restating type forbidden"
+inject: "Page `tags` field: YAML list; primary language follows the default key of the writing-style declaration page `wiki/language.md` (page or key absent → session language); English tags lowercase kebab-case; hierarchy ≤2 (`/` separated), ≤5 per page; open semantic classification, restating type forbidden"
+usage:
+  - Before writing, read `wiki/tags.md` and prefer reusing existing terms
+  - New-term conventions: primary language follows the language page's default key (absent → session language, preventing mixed Chinese-English fragmentation of the vocabulary); English lowercase kebab-case; hierarchy ≤2; ≤5 per page; restating type forbidden
+checks:
+  - Mechanical items (attached-audit script `scripts/check.py`, executed on audit discovery): >5 tags on one page → warning; tags restating type → warning; hierarchy over the limit (parent/child ≤2) or empty segment → warning
+  - Semantic items (check command): near-duplicate tags → warning suggesting a merge; merging is a mechanically-confirmed item (list presented, executed after user confirmation)

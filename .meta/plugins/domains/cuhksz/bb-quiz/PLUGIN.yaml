@@ -1,0 +1,35 @@
+id: bb-quiz
+schema_version: 1
+version: 0.8
+depends:
+  - bb-track
+  - bb-map
+commands:
+  - bb-quiz
+usage_routes:
+  - bb-track
+updated: 2026-10-07
+attachment:
+  - "cuhksz/bb/<term>/<course>/notes/testing/ — papers subzone (bb v0.7 coexistence; one pair per test: <name>-questions.md + <name>-answers.md, grading appended on the answers page's `## Grading`; ai artifacts append-only, a retest issues a new paper, old papers kept)"
+  - "wiki/cuhksz/bb/<term>/<course>/user.md — cognition profile (bb-track's own; this plugin read-only consumes proficiency/goal layer/wrong answers, grading write-back via the bb-track contract)"
+  - "wiki/cuhksz/bb/<term>/<course>/courseware/, assessments/ — bb-map's own; this plugin read-only (sm-N anchors, glossary, known assignments)"
+fields:
+  quiz: "block mapping (paper page) — course (course code) / scope (question scope) / difficulty_median (difficulty median 1-5, cognitive levels) / types (question-type list, open vocabulary) / source (sample|assignment|habit) / answer_of (answers page backlinking the questions file name)"
+inject: "Self-test generation bb-quiz (bb-track's testing consumer): step 0: ensure the course is fully mapped (bb-map); the user specifies a scope + optional sample → generate questions (types and difficulty median aligned to the sample; without a sample fall back to known assignments, then to user habits; question-stem language source-aligned — following the sample/known assignments/course materials) + explanations (language reader-aligned — take the annotation key of the language declaration page `wiki/language.md`, page or key absent → session language; the register — audience reading level — defaults to first/second-year undergraduates: intuition before formalism, one concept per step, a concrete example, each term explained at first use, plain prose; each question marked with its sm-N knowledge point and citing its source (courseware/textbook) via the mapping's raw_path); the full knowledge-point set = courseware sm-N, the scope = the user-specified subset, no out-of-scope (unless the user says so); question selection and difficulty distribution follow bb-track proficiency/goal layer/wrong answers (stale → conservative tier; cold start → uniform coverage over all-unanchored), teaching minutes (notes/ ai notes) read best-effort on demand; papers land at cuhksz/bb/<term>/<course>/notes/testing/<name>-questions.md + -answers.md (origin: ai, append-only); grading (after answering) = the answers page appends `## Grading` + write-back into user.md's evidence stream after confirmation (machine self-test); post-write log line (other --domain bb) + verify"
+inject_tier: member
+usage:
+  - "Map-first: step 0 = ensure the course is fully mapped (bb-map full); questions and explanations base directly on the mapped sm-N + the `## Terminology` glossary, never on raw source or ad-hoc reading"
+  - "Parse input: scope (chapter/unit/sm-N list) + sample (optional); the course is located via the bb directory structure (<term>/<course>, the active term may be omitted)"
+  - "Read the full knowledge-point set: courseware sm-N + the `## Terminology` glossary, take the in-scope subset"
+  - "Read the user's cognition: user.md proficiency/goal layer/evidence stream; verify stale first (conservative tier before verification), cold start treated as unanchored (discipline in the injection region's bb-track block)"
+  - "Fix types and the difficulty median: sample → assessments known assignments → user habits; difficulty = cognitive level 1-5 (remember/understand/apply/analyze/synthesize), median M = the median of the sample's per-question levels (LLM semantic judgment, a soft constraint — the coarse guarantee = unfamiliar leans easy, mastered leans challenging)"
+  - "Read teaching minutes (best-effort): notes/ ai notes (origin: ai) — what was recently taught / where the user got stuck — avoiding repetition or emphasizing what was just taught; silently skip when absent or empty"
+  - "Select points: in-scope knowledge points covered in the order unfamiliar / unanchored / wrong answers / short-term priorities"
+  - "Generate questions: stem language source-aligned (sample → known assignments → course materials), terminology aligned to the courseware glossary, types aligned to the sample, difficulty around M"
+  - "Write explanations: reader-aligned language (the language page's annotation key, page or key absent → session language) and the register (audience reading level, default first/second-year undergraduates — intuition before formalism, one concept per step, a concrete example, each term explained at first use, plain prose), each question marked with its knowledge point + sm-N wikilink and citing its source (courseware/textbook) via the mapping's raw_path; grading in the same language and register"
+  - "Land: notes/testing/<name>-questions.md + -answers.md (quiz block mapping + origin: ai + generated; the questions page contains no answers); old papers never deleted or overwritten"
+  - "Grade (after the user answers): judge per question against the answers page → append `## Grading` on the answers page (date + per-question correctness + score); wrong-answer points and overall performance written back into user.md's evidence stream after user confirmation (source machine self-test) — the significant ones adjust readings per the convergence discipline; the paper itself is material, the profile takes only conclusions"
+  - "No out-of-scope: terminology/knowledge points drawn only from in-scope courseware sm-N; out-of-scope questions are discarded and regenerated (unless the user says so; the semantic constraint is self-checked on the generation side)"
+  - "Post-write: log line (type other --domain bb) + pipeline.py verify"
+checks:
+  - "Semantic items (v0.1 manual, attached audit deferred): a paper landed outside notes/testing/ → error; overwriting or deleting an existing paper → error; stems/explanations citing knowledge points outside the scope or the course → warning (semantic judgment); an explanation missing its sm-N knowledge-point mark → warning; the quiz block mapping missing course or scope → warning; answers/explanations appearing on the questions page → warning; writing user.md after grading without confirmation → error; grading missing per-question correctness → warning"

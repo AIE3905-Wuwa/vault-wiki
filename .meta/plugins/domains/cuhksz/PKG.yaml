@@ -1,0 +1,16 @@
+schema_version: 1
+id: cuhksz
+version: 0.1
+compat: ">= 0.2"
+members: [cuhksz, bb, bb-map, bb-quiz, bb-teach, bb-track, sis, registry]
+connectors:
+  - name: bb-cli
+    path: connectors/bb-cli
+  - name: sis-cli
+    path: connectors/sis-cli
+depends: [framework]
+uninstall:
+  retains: [wiki/cuhksz/, cuhksz/]
+  credentials: [~/.bb-cli/, ~/.sis-cli/]
+  bridges: [profile#domain-cognition, language#consumers]
+  processes: []

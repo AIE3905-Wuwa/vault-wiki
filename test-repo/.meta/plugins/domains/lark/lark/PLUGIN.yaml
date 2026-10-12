@@ -1,0 +1,23 @@
+id: lark
+schema_version: 1
+version: 0.5
+depends:
+  - domain
+  - wiki
+  - trust
+  - log
+updated: 2026-10-06
+attachment:
+  - "wiki/lark/ — external pointer territory (one profile directory per enterprise, directory name = lark-cli --profile name; creating the directory creates the profile, no central declaration page)"
+fields:
+  lark: "block mapping — profile (owning enterprise identity, = the containing directory name) / kind (page form: profile identity page, docs domain hub, docx|wiki|sheet|base|file… object types, open vocabulary constrained by domain plugins) / token (object token, identity proof, page↔token one-to-one) / url (lark-side address)"
+commands:
+  - lark-map
+inject: "External pointer domain wiki/lark/<profile>/ (one directory per enterprise, name = lark-cli --profile, always carried): identity page profile.md per profile (one sentence + TTL override); territory two forms — pointer pages (type: lark + lark block mapping profile/kind/token/url, token one-to-one with the page = identity proof, fully regenerable) and archive pages (mechanical section + append-only accumulation, form owned by domain plugins); subdomains lark-docs cloud docs · lark-im interpersonal · lark-calendar calendar adapter; trust ceiling machine-confirmed, stale_after = pull + TTL (default 7 days, overridable), agent = synchronizer; resources gone → status: deprecated, never deleted; CLI discipline — --profile always, auth live never on disk; member detail on demand (skills + manifests)"
+usage:
+  - Pointer page registration fields: `type: lark` + `lark` block mapping (profile = containing directory name, kind = object type, token, url) + generated / stale_after
+  - On a stale pointer page: pull fresh with `--profile` via lark-cli, overwriting the frontmatter mechanical fields (updated / stale_after); snapshot-type body content is appended, never overwritten
+  - Creating a new profile: create a directory under `wiki/lark/` (name = cli profile name) + `profile.md` (kind: profile, one sentence + optional TTL override); domain plugins automatically cover that directory
+  - Domain plugin contract: depends lark, iterate all profile directories serving in parallel, constrain only their own kind vocabulary and in-domain page format, never touch the profile abstraction
+checks:
+  - Semantic items (v0.1 manual, attached audit deferred): pointer page missing token / duplicate token → error; lark.profile not matching the containing directory name → warning; type: lark outside wiki/lark/ → error; domain hub page (docs.md etc.) outside a profile directory → warning

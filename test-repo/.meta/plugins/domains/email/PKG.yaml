@@ -1,0 +1,14 @@
+schema_version: 1
+id: email
+version: 0.1
+compat: ">= 0.2"
+members: [email]
+connectors:
+  - name: mail-cli
+    path: connectors/mail-cli
+depends: [framework]
+uninstall:
+  retains: [wiki/email/]
+  credentials: ["mail-cli 凭据与会话缓存（本机，不入库）"]
+  bridges: []
+  processes: []

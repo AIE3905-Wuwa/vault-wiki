@@ -1,0 +1,14 @@
+schema_version: 1
+id: lark
+version: 0.1
+compat: ">= 0.2"
+members: [lark, lark-docs, lark-im, lark-calendar]
+connectors:
+  - name: lark-cli
+    external: true
+depends: [framework]
+uninstall:
+  retains: [wiki/lark/]
+  credentials: [~/.lark-cli/]
+  bridges: [profile#domain-cognition]
+  processes: ["lark-cli event consume 长驻订阅（语义收尾时停机）"]

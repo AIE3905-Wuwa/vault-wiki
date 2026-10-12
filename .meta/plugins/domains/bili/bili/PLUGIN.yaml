@@ -1,0 +1,35 @@
+id: bili
+schema_version: 1
+version: 0.4
+depends:
+  - domain
+  - wiki
+  - trust
+  - log
+  - todo
+  - calendar
+  - notes
+  - cron
+updated: 2026-10-06
+attachment:
+  - "wiki/bili/ — bilibili domain territory (domain root: account identity page + digest page; up/ UP archives emergence-based, never pre-created)"
+  - "wiki/bili/bili.md — domain declaration page doubling as account identity page (type: bili; bili block mapping mid/nickname/TTL override + watch block mapping follow-source list, **create when absent** — data source bili-cli me)"
+  - "wiki/bili/inbox.md — digest page (new uploads from followed sources + personal-data highlights, lines tagged with the source, whole page regenerable, short TTL default 1 day, **create when absent**; session-triggered refresh at this stage, cron daily reserved)"
+  - "wiki/bili/up/ — UP archives (token = mid one-to-one with the page; mechanical section maintained by reconciliation + accumulation section append-only; emergence-based)"
+  - "wiki/bili/video/ — video archives (token = bvid one-to-one with the page, page name a human-readable title; **emergence by explicit request** — created only on explicit user request to archive or repeated query hits, never automatically); two-section regime — `## Summary` (ai product origin: ai, regenerable and overwritable: a distillation of a fixed source, the source stays put so overwriting is lossless) + `## Review` (human evidence append-only, page promoted to human-reviewed)"
+fields:
+  bili: "block mapping — account (owning account = the domain identity page, omittable in single-account deployments) / kind (page form: account identity page / up UP archive / video video archive, open vocabulary) / mid (up archive identity proof: the Bilibili numeric uid one-to-one with the page) / bvid (video archive identity proof, one-to-one with the page) / title (video archive page title) / url (space or video deep link)"
+  watch: "block mapping (domain identity page) — UP name → mid + one-sentence follow reason; the tracked-source list, fresh pulls traverse this table"
+inject: "bilibili content domain wiki/bili/ (connector bili-cli — web-cookie login, command surface and red lines in its skill): identity page bili.md (mid/nickname/TTL + watch list, created when absent); query-and-answer, no default projection — retrieval from fresh pulls, high-value conclusions emerge into notes with backlinks; emergence archives — up/ (repeated hits or explicit request), video/ (explicit request or repeated hits; ai summary overwritable + human review append-only); digest inbox.md (regenerable, short TTL); low-risk write whitelist (watchlater/favorites add-remove, like) each needs the user's explicit verb + CLI --yes double gate — writes outside never offered; derivations out-only (bridges); red lines: cookies stay local, personal watch data never enters the framework repo; trust ceiling machine-confirmed, agent = synchronizer"
+usage:
+  - Connection discipline: credentials imported via bili-cli login (cookies live only in ~/.bili-cli/, never echoed, never committed); entering the domain reads wiki/bili/bili.md first (create when absent: bili-cli me pulls fresh and builds the page) — the tracking scope follows the watch block mapping, direct human edits are legal (add/remove sources)
+  - Digest refresh (mechanical): traverse the watch list pulling each UP's latest uploads (bili-cli up --arcs) → compare against the archive/digest watermarks → distill and rewrite inbox.md (new-upload lines + personal-data highlight lines) → log line (type other); stale handled the same way (the agent is the synchronizer); the space endpoint easily 412s on rapid consecutive calls, stay serial and restrained
+  - Queries answered from fresh pulls: search (search --kind video|up) / details and parts (video) / subtitles (subtitle) / UP (up) work login-free, favorites (fav) / history (history) / watchlater (watchlater) need the login state — presentation ends it, nothing lands; repeatedly hitting the same UP = the emergence signal for an archive
+  - Archiving (emergence-based): UP archive up/<name>.md (token = mid one-to-one; mechanical section bili block mapping reconciled on fresh pulls + latest-uploads snapshot section + stale_after, accumulation section `## Relation to me` follow reasons and conclusions append-only); explicit user request may also create directly
+  - Low-risk writes: the whitelist surface (watchlater add/remove, fav add/remove/move, like) executes only on the user's explicit verb in the session (agent-layer discipline) + the CLI --yes gate as double safety; a log line after writing (type other)
+  - Watching and archiving: fetch the substance via the degradation chain (CC subtitles → AI subtitles → official summary → tmp transcription on confirmation) → the summary lands on the video page `## Summary` after user confirmation (origin: ai, rewatching may regenerate and overwrite); `bili-cli video` metadata lands in the bili block mapping (bvid one-to-one); audio intermediates land only in wiki/tmp/, discarded after use
+  - Reviews: the user's opinions on a video → the video page `## Review`, append-only (date + one sentence, human evidence, page promoted to human-reviewed); reviews of un-archived videos fall back to notes with a backlinked URL; high-value opinions and conclusions → notes with backlinks
+  - One-way derivation (out-only): livestream/premiere time points → calendar month-page schedule lines (source key bili); action items → todo; high-value conclusions → notes backlinking the territory page — three bridges, format details owned by the bridges
+  - cron upgrade path: once the watch list and digest format stabilize, register via the cron bridge a task page wiki/cron/<name>.md (form: script, domain: bili, action = bili-cli digest refreshing inbox.md) — pure script, zero sessions, replay recipe and failure discipline in the cron plugin
+checks:
+  - Semantic items (v0.1 manual, attached audit deferred): a type: bili page outside wiki/bili/ → error; duplicate UP-archive mid or video-archive bvid, or mismatching the page's declarations → error; manual-edit traces on the digest page → warning; stale list (info level: pull date + TTL)
