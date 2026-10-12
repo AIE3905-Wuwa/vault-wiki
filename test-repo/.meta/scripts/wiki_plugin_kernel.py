@@ -740,7 +740,7 @@ def parse_pkg(path):
             if data.get(target) is None:
                 data[target] = {}
             k, v = m.group(1), m.group(2)
-            data[target][k] = flow_list(v) if v.startswith("[") else ([strip_quotes(v)] if v else [])
+            data[target][k] = flow_list(v) if v.startswith("[") else (strip_quotes(v) if v else "")
             item = None
         elif indent == 4 and item is not None:
             m = re.match(r"^([A-Za-z_][\w-]*):\s*(.*)$", line)
