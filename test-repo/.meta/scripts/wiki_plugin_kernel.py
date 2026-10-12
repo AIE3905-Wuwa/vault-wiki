@@ -93,6 +93,9 @@ CONNECTORS_DIR = os.path.join(ROOT, "connectors")
 SKILLS_DIR = os.path.join(ROOT, ".agents", "skills")
 AGENTS_MD = os.path.join(ROOT, "AGENTS.md")
 REGISTRY = os.path.join(ROOT, ".meta", "protocol", "registry.yaml")
+MIGRATIONS_DIR = os.path.join(ROOT, ".meta", "migrations")   # kernel zone: staged migration declarations (use-and-delete)
+LEDGER = os.path.join(MIGRATIONS_DIR, "pending.json")          # kernel-owned warning ledger (never a plugin surface)
+JOURNAL = os.path.join(ROOT, ".meta", "kernel-journal.log")    # mechanical event journal, one line per op
 
 # manifest's seven fields (id / version / depends / updated / attachment / fields / inject) + optional commands
 REQUIRED_KEYS = ["id", "version", "depends", "updated", "attachment", "fields", "inject"]
@@ -965,7 +968,7 @@ def converge(label):
     return True
 
 
-def do_install(spec, args):
+def do_install(spec, args, prev_version=None):
     """Install a package from the index (or --path <dir> for a local/unregistered one): masters + connectors + commands, then converge."""
     pkg, _, tag = spec.partition("@") if spec else ("", "", "")
     path = None
@@ -1074,7 +1077,7 @@ def do_install(spec, args):
         print(f"[error] {pid} already installed — uninstall first (kernel uninstall {pid} --yes)")
         return 1
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__",
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__", "migrations",
                                                             *sorted(pruned)))
     copied_conn, copied_cmd = [], []
     csrc = os.path.join(src, "connectors")
@@ -1102,12 +1105,16 @@ def do_install(spec, args):
                 continue
             shutil.copytree(os.path.join(msrc, d), dd, ignore=shutil.ignore_patterns("__pycache__"))
             copied_cmd.append(d)
+    staged = _stage_migrations(os.path.join(src, "migrations"), pid, prev_version, pkgm.get("version"))
     if not path:
         shutil.rmtree(src, ignore_errors=True)
     print(f"[install] {pid}: masters -> .meta/plugins/domains/{pid}/"
           + (f"; connectors: {', '.join(copied_conn)}" if copied_conn else "")
           + (f"; commands: {', '.join(copied_cmd)}" if copied_cmd else ""))
+    _journal("install", f"{pid} v{pkgm.get('version')}" + (f" subset(-{','.join(sorted(pruned))})" if pruned else "") + (f" staged={','.join(staged)}" if staged else ""))
     converge("install")
+    if staged:
+        print(f"[pending] semantic migration staged for {pid}: {', '.join(staged)} — kernel migrate {pid}; validate stays red until cleared")
     return 0
 
 
@@ -1159,6 +1166,7 @@ def do_uninstall(pkg, args):
     print(f"[uninstall] {pkg}: masters removed"
           + (f"; commands: {', '.join(removed_cmd)}" if removed_cmd else "")
           + (f"; connectors: {', '.join(removed_conn)}" if removed_conn else ""))
+    _journal("uninstall", f"{pkg} v{pkgm.get('version', '?')}")
     converge("uninstall")
     do_residual(pkg, {pkg: pkgm})
     un = pkgm.get("uninstall") or {}
@@ -1188,8 +1196,94 @@ def do_list_remote():
     return 0 if index else 1
 
 
-def do_upgrade(pkg):
-    """Reconciliation report (v1: report-only — upgrades go uninstall+install, per #20 逐包过不级联)."""
+def _upgrade_action(pkg, args):
+    """Mechanical reinstall + update report + migration chain staging (issue #20 + migration design)."""
+    import contextlib
+    import io
+    pkg_dir = os.path.join(PLUGINS_DIR, "domains", pkg)
+    if not os.path.exists(pkg_dir):
+        print(f"[error] {pkg} not installed")
+        return 1
+    old_pkgm = parse_pkg(os.path.join(pkg_dir, "PKG.yaml"))
+    old_ver = str(old_pkgm.get("version", "0"))
+    old_members = {}
+    for m in old_pkgm.get("members") or []:
+        mp = os.path.join(pkg_dir, str(m), "PLUGIN.yaml")
+        if os.path.exists(mp):
+            try:
+                old_members[str(m)] = str(parse_manifest(mp).get("version", "?"))
+            except ValueError:
+                old_members[str(m)] = "?"
+    path = None
+    if "--path" in args:
+        i = args.index("--path")
+        path = args[i + 1] if i + 1 < len(args) else None
+    errors = []
+    if path:
+        src = path
+        if not os.path.exists(os.path.join(src, "PKG.yaml")):
+            print(f"[error] {src}/PKG.yaml not found")
+            return 1
+    else:
+        index, _src = load_index(errors)
+        if pkg not in index:
+            print(f"[error] {pkg} not in the index — use --path for local/dev upgrades")
+            return 1
+        entry = index[pkg]
+        src = _clone_package(entry, pkg, None, errors)
+        for e in errors:
+            print(e)
+        if src is None:
+            return 1
+    new_pkgm = parse_pkg(os.path.join(src, "PKG.yaml"))
+    new_ver = str(new_pkgm.get("version", old_ver))
+    if new_ver == old_ver:
+        print(f"[upgrade] {pkg}: already at v{old_ver} (index/local agree) — nothing to do")
+        if not path:
+            shutil.rmtree(src, ignore_errors=True)
+        return 0
+    fw = framework_version()
+    if fw is not None:
+        m = re.fullmatch(r">=\s*(\d+)\.(\d+)", str(new_pkgm.get("compat") or ""))
+        if m and (int(m.group(1)), int(m.group(2))) > fw:
+            print(f"[error] upgrade needs framework {'.'.join(map(str, (int(m.group(1)), int(m.group(2)))))} first (kernel upgrade framework — pending)")
+            return 1
+    # quiet mechanical reinstall (uninstall -> install-from-src with prev_version)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        ok1 = do_uninstall(pkg, ["--yes"])
+        ok2 = do_install(pkg + ("" if path else ""), (["--path", path] if path else []), prev_version=old_ver) if ok1 == 0 else 1
+    if ok2 != 0:
+        print(buf.getvalue())
+        print("[error] reinstall failed — state may be partial, rerun kernel validate")
+        return 1
+    # report: member version deltas + changelog excerpts
+    new_members = {}
+    for m in new_pkgm.get("members") or []:
+        mp = os.path.join(PLUGINS_DIR, "domains", pkg, str(m), "PLUGIN.yaml")
+        if os.path.exists(mp):
+            try:
+                new_members[str(m)] = str(parse_manifest(mp).get("version", "?"))
+            except ValueError:
+                new_members[str(m)] = "?"
+    changed = {m: (old_members.get(m, "new"), new_members.get(m, "new")) for m in new_members if old_members.get(m, "new") != new_members.get(m, "new")}
+    print(f"[upgrade] {pkg} v{old_ver} -> v{new_ver} — {len(changed)} member change(s); semantic migrations: {', '.join(_load_ledger().get(pkg, {}).get('items', [])) or 'none'}")
+    for m, (a, b) in sorted(changed.items()):
+        print(f"[upgrade]   {m} {a} -> {b}")
+        if a != "new":
+            for line in _changelog_delta(os.path.join(PLUGINS_DIR, "domains", pkg, m, "PLUGIN.md"), a, b)[:4]:
+                print(f"[upgrade]     {line}")
+    _journal("upgrade", f"{pkg} {old_ver}->{new_ver} changed={len(changed)}")
+    if _load_ledger().get(pkg):
+        print(f"[pending] {pkg}: semantic migration staged — kernel migrate {pkg}; validate stays red until cleared")
+    return 0
+
+
+def do_upgrade(pkg, args=None):
+    """Reconciliation report; `upgrade <pkg> --yes` performs the mechanical reinstall + stages migrations (per #20 逐包不级联)."""
+    args = args or []
+    if pkg and "--yes" in args:
+        return _upgrade_action(pkg, args)
     errors = []
     index, src = load_index(errors)
     installed = load_packages([])
@@ -1212,6 +1306,194 @@ def do_upgrade(pkg):
         print("  (no packages installed)")
     for e in errors:
         print(e)
+    return 0
+
+
+def _vt(x):
+    return tuple(int(i) for i in str(x).split("."))
+
+
+def _journal(op, detail):
+    import datetime
+    line = f"{datetime.datetime.now().isoformat(timespec='seconds')} {op} {detail}"
+    try:
+        old = open(JOURNAL, encoding="utf-8").read().splitlines() if os.path.exists(JOURNAL) else []
+    except OSError:
+        old = []
+    old.append(line)
+    open(JOURNAL, "w", encoding="utf-8").write("\n".join(old[-500:]) + "\n")
+
+
+def _load_ledger():
+    import json as _json
+    if not os.path.exists(LEDGER):
+        return {}
+    try:
+        return _json.load(open(LEDGER, encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_ledger(led):
+    import json as _json
+    os.makedirs(MIGRATIONS_DIR, exist_ok=True)
+    _json.dump(led, open(LEDGER, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
+
+def _banner_set(entries):
+    """Tri-face visibility, agent side: a kernel-managed block inside the AGENTS injection region — every session sees it until cleared."""
+    if not os.path.exists(AGENTS_MD):
+        return
+    text = open(AGENTS_MD, encoding="utf-8").read()
+    text = re.sub(r"<!-- pending-migrations -->.*?<!-- /pending-migrations -->\n*", "", text, flags=re.S)
+    if entries:
+        lines = "; ".join(f"{k} {v.get('from', '?')}->{v.get('to', '?')}" for k, v in sorted(entries.items()))
+        block = (f"<!-- pending-migrations -->\n> ⚠ PENDING SEMANTIC MIGRATIONS: {lines} — "
+                 f"territory may be mid-shape; complete via `kernel migrate <pkg> --clear`; validate stays red until cleared.\n<!-- /pending-migrations -->\n\n")
+        m = re.search(re.escape(INJECT_START) + r"\n", text)
+        if m:
+            text = text[:m.end()] + "\n" + block + text[m.end():]
+    open(AGENTS_MD, "w", encoding="utf-8").write(text)
+
+
+def _stage_migrations(migsrc, pid, prev_version, new_version):
+    """Stage declarations into the kernel zone + register the ledger + AGENTS banner. Package dirs never carry migrations (use-and-delete)."""
+    if not os.path.isdir(migsrc):
+        return []
+    os.makedirs(os.path.join(MIGRATIONS_DIR, pid), exist_ok=True)
+    staged = []
+    if prev_version is None:
+        cands = [("init", "init.md")] if os.path.exists(os.path.join(migsrc, "init.md")) else []
+    else:
+        cands = []
+        for f in sorted(os.listdir(migsrc)):
+            m = re.fullmatch(r"(\d+\.\d+)-to-(\d+\.\d+)\.md", f)
+            if m and _vt(m.group(1)) >= _vt(prev_version):
+                cands.append((f[:-3], f))
+    for label, f in cands:
+        shutil.copyfile(os.path.join(migsrc, f), os.path.join(MIGRATIONS_DIR, pid, f))
+        pyp = os.path.join(migsrc, f[:-3] + ".py")
+        if os.path.exists(pyp):
+            shutil.copyfile(pyp, os.path.join(MIGRATIONS_DIR, pid, f[:-3] + ".py"))
+        staged.append(label)
+    if staged:
+        led = _load_ledger()
+        led[pid] = {"from": str(prev_version or "0"), "to": str(new_version), "items": staged}
+        _save_ledger(led)
+        _banner_set(led)
+        _journal("warn+", f"{pid} {prev_version or '0'}->{new_version} items={','.join(staged)}")
+    return staged
+
+
+def _ast_gate(path):
+    """Verify-script gate: stdlib-adjacent, read-only, defines verify(ctx). Catches casual abuse; malice is the registry review's job."""
+    try:
+        tree = ast.parse(open(path, encoding="utf-8").read())
+    except SyntaxError as e:
+        return [f"syntax error: {e}"]
+    issues = []
+    banned = {"subprocess", "shutil", "socket", "urllib", "urllib.request", "requests", "http", "ftplib", "telnetlib", "pickle"}
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Import):
+            for a in n.names:
+                if a.name.split(".")[0] in banned:
+                    issues.append(f"banned import: {a.name}")
+        elif isinstance(n, ast.ImportFrom):
+            if (n.module or "").split(".")[0] in banned:
+                issues.append(f"banned import: {n.module}")
+        elif isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "open":
+            mode = n.args[1].value if len(n.args) > 1 and isinstance(n.args[1], ast.Constant) else "r"
+            if any(c in str(mode) for c in "wa+"):
+                issues.append(f"open(..., {mode!r}) — verify is read-only")
+    if not any(isinstance(n, ast.FunctionDef) and n.name == "verify" for n in tree.body):
+        issues.append("verify(ctx) not defined")
+    return issues
+
+
+def _run_verify(py_path):
+    """Execute a staged verify(ctx) in-process; returns (issues, gate_problems)."""
+    gate = _ast_gate(py_path)
+    if gate:
+        return None, gate
+    import wikilib
+    spec = importlib.util.spec_from_file_location("vw_verify", py_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    ctx = types.SimpleNamespace(root=ROOT, pages=list(wikilib.walk_pages(ROOT)))
+    try:
+        return mod.verify(ctx) or [], []
+    except Exception as e:
+        return None, [f"verify() raised: {e}"]
+
+
+def _changelog_delta(md_path, old_v, new_v):
+    try:
+        sec = open(md_path, encoding="utf-8").read().split("## Changelog", 1)[1]
+    except (OSError, IndexError):
+        return []
+    out = []
+    for line in sec.splitlines():
+        m = re.match(r"-\s+(\d+(?:\.\d+)?)\s*[\s(]", line.strip())
+        if m and _vt(old_v) < _vt(m.group(1)) <= _vt(new_v):
+            out.append(line.strip()[:160])
+    return out
+
+
+def do_migrate(pkg, args):
+    """Migration status / declaration printing / gated clear. The exit is always open: migrate works while warned."""
+    led = _load_ledger()
+    if not pkg:
+        if not led:
+            print("[migrate] no pending semantic migrations")
+            return 0
+        for k, v in sorted(led.items()):
+            print(f"[migrate] {k} {v.get('from')}->{v.get('to')} pending: {', '.join(v.get('items', []))}")
+        return 0
+    ent = led.get(pkg)
+    if ent is None:
+        print(f"[migrate] {pkg}: nothing pending")
+        return 0
+    pdir = os.path.join(MIGRATIONS_DIR, pkg)
+    if "--clear" not in args:
+        print(f"[migrate] {pkg} {ent.get('from')}->{ent.get('to')} pending: {', '.join(ent.get('items', []))}")
+        for f in sorted(os.listdir(pdir)) if os.path.isdir(pdir) else []:
+            if f.endswith(".md"):
+                print(f"[migrate] --- {f} ---")
+                print(open(os.path.join(pdir, f), encoding="utf-8").read().rstrip())
+                pyf = os.path.join(pdir, f[:-3] + ".py")
+                if os.path.exists(pyf):
+                    issues, gate = _run_verify(pyf)
+                    if gate:
+                        print(f"[migrate] verify gate: {gate}")
+                    elif issues:
+                        print(f"[migrate] verify: {len(issues)} issue(s): " + " | ".join(str(i)[:100] for i in issues[:5]))
+                    else:
+                        print("[migrate] verify: clean — ready to clear (--clear)")
+        return 0
+    # --clear: verify-gated (explicit assertion only via --force when no script)
+    cleared_all = True
+    for f in sorted(os.listdir(pdir)) if os.path.isdir(pdir) else []:
+        if not f.endswith(".py"):
+            continue
+        issues, gate = _run_verify(os.path.join(pdir, f))
+        if gate:
+            print(f"[error] verify gate refused {f}: {gate}")
+            return 1
+        errs = [i for i in issues if not (isinstance(i, (tuple, list)) and i[0] == "warning")]
+        if errs:
+            print(f"[error] {f}: migration incomplete — {len(errs)} issue(s): " + " | ".join(str(i)[:100] for i in errs[:5]))
+            return 1
+        if issues:
+            print(f"[warning] {f}: warnings (non-blocking): " + " | ".join(str(i)[:100] for i in issues[:5]))
+    if not any(f.endswith(".py") for f in os.listdir(pdir)) and "--force" not in args:
+        print(f"[error] no verify script staged for {pkg} — clear needs --force (explicit assertion) or author-provided verify")
+        return 1
+    shutil.rmtree(pdir, ignore_errors=True)
+    del led[pkg]
+    _save_ledger(led)
+    _banner_set(led)
+    _journal("clear", f"{pkg} {ent.get('from')}->{ent.get('to')} verify-clean")
+    print(f"[migrate] {pkg}: warning cleared, staged files deleted (use-and-delete); validate unblessed — permanent invariants belong in scripts/check.py (judgment split rule)")
     return 0
 
 
@@ -1322,8 +1604,14 @@ def main():
         return do_uninstall(sys.argv[2] if len(sys.argv) > 2 else None, sys.argv[3:])
     if cmd == "list-remote":
         return do_list_remote()
+    if cmd == "migrate":
+        return do_migrate(sys.argv[2] if len(sys.argv) > 2 else None, sys.argv[3:])
     if cmd == "upgrade":
-        return do_upgrade(sys.argv[2] if len(sys.argv) > 2 else None)
+        return do_upgrade(sys.argv[2] if len(sys.argv) > 2 else None, sys.argv[3:])
+    _led = _load_ledger()
+    if _led and cmd:
+        _ps = "; ".join(f"{k} {v.get('from', '?')}->{v.get('to', '?')}" for k, v in sorted(_led.items()))
+        print(f"[pending] SEMANTIC MIGRATIONS OUTSTANDING: {_ps} — kernel migrate <pkg>; validate stays red until cleared")
     plugins, errors = load_plugins()
     pkgs = load_packages(errors)
     if cmd == "pkg":
@@ -1363,6 +1651,8 @@ def main():
         validate_bindings(plugins, errors)
         validate_bridges(plugins, errors)
         validate_packages(plugins, pkgs, errors, warns)
+    for k, v in sorted(_led.items()):
+        errors.append(f"[error] pending semantic migration {k} {v.get('from', '?')}->{v.get('to', '?')} — kernel migrate {k} --clear; mechanical blessing withheld (tri-face warning)")
     for w in warns:
         print(f"[warning] {w}")
     for e in errors:
