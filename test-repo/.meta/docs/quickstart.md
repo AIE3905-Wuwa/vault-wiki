@@ -1,6 +1,6 @@
 # Quickstart
 
-> Reader: anyone who wants to install the framework into their own directory—an Obsidian vault or any folder works—or the agent doing it for you. About ten minutes end to end; every step has been rehearsed and verified against a clean directory. First verified 2026-09-13; updated 2026-10-04 to 28 plugins, 13 commands; 2026-10-06 counts refreshed to 35 plugins.
+> Reader: anyone who wants to install the framework into their own directory—an Obsidian vault or any folder works—or the agent doing it for you. About ten minutes end to end; every step has been rehearsed and verified against a clean directory. First verified 2026-09-13; updated 2026-10-04 to 28 plugins, 13 commands; 2026-10-06 counts refreshed to 35 plugins; 2026-10-12 package layout — core 20 + 5 domain packages (see [packages.md](packages.md)).
 
 ## What you get
 
@@ -18,11 +18,11 @@
 
 ## Five deployment steps
 
-**① Get the framework**: `git clone https://github.com/Josh-Zhangccc/vault-wiki.git`, or download the ZIP and unzip it.
+**① Get the framework**: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git`, or download the ZIP and unzip it (the old personal-repo address redirects).
 
-**② Copy two trees** to the target vault root: `.meta/` and `.agents/skills/`. Plugin masters, command masters and copies, protocol artifacts, and mechanical scripts all live there.
+**② Copy two trees** to the target vault root: `.meta/` and `.agents/skills/`. Plugin masters, command masters and copies, protocol artifacts, and mechanical scripts all live there. Minimal-core variant: copy only `.meta/plugins/core/` + `.meta/protocol/` + `.meta/scripts/` + `.meta/VERSION` + `.meta/command/` (the 20 framework plugins, no domain packages); add a package later by copying its `domains/<pkg>/` directory and rerunning `all`.
 
-**③ Write the target vault's AGENTS.md**: draft the shell yourself—one identity paragraph plus a layout description; copy the injection region marker block verbatim from this repository's AGENTS.md, not a single character changed—from `<!-- wiki-inject:start -->` to `<!-- wiki-inject:end -->`—it is the sole source of the structural contract. If the target vault already has an AGENTS.md, paste in only the injection region block.
+**③ Write the target vault's AGENTS.md**: draft the shell yourself—one identity paragraph plus a layout description; copy the injection region marker block verbatim from [agents-example.md](agents-example.md), not a single character changed—from `<!-- wiki-inject:start -->` to `<!-- wiki-inject:end -->`—it is the sole source of the structural contract. If the target vault already has an AGENTS.md, paste in only the injection region block.
 
 **④ Create four empty directories**: `vault/`, `wiki/notes/`, `wiki/sessions/`, `wiki/vault/`. Derived pages need no hand-creation—index, tags, hot, and log are built by the pipeline on first run; the root index's `format_version` is also rendered by the pipeline.
 
@@ -32,7 +32,7 @@
 python .meta/scripts/wiki_plugin_kernel.py all
 ```
 
-Expected: 35 plugins pass validate; injection region unchanged; command copies in sync. Any error means the copy is incomplete—fix it and rerun.
+Expected: all plugins on disk pass validate (core + whichever packages you copied), package rosters reconcile; injection region unchanged; command copies in sync. Any error means the copy is incomplete—fix it and rerun.
 
 ## First-run verification
 
@@ -62,8 +62,8 @@ The core deployment includes only vault and general wiki capabilities. External 
 
 ## Upgrade and uninstall
 
-- **Upgrade**: re-copy `.meta/` and `.agents/skills/`, rerun `all`. Framework components are separated from data zones; `wiki/` and `vault/` are unaffected
-- **Uninstall**: delete the two trees plus the AGENTS.md injection region block. The data zones are yours—dispose of them as you see fit
+- **Upgrade**: re-copy `.meta/` and `.agents/skills/`, rerun `all` (per-package `kernel upgrade` lands with the process round — see [packages.md](packages.md)). Framework components are separated from data zones; `wiki/` and `vault/` are unaffected
+- **Uninstall**: delete the two trees plus the AGENTS.md injection region block. Package-level removal (`kernel uninstall` + residual scan) lands with the process round; until then the same effect is manual: remove `domains/<pkg>/`, rerun `all`, and grep the anchors the [packages.md](packages.md) uninstall contract lists. The data zones are yours—dispose of them as you see fit
 
 ## FAQ
 
