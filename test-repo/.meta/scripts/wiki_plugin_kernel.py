@@ -879,12 +879,281 @@ def do_residual(pkg_id, pkgs):
     return 0
 
 
+# ---------- process round: install / uninstall / list-remote / upgrade (issue #20 流程轮) ----------
+
+INDEX_FILENAME = "INDEX.yaml"
+INDEX_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/vault-wiki/master/INDEX.yaml"
+
+
+def load_index(errors, quiet=False):
+    """Resolve the package index: local ROOT/INDEX.yaml first, else the framework repo's raw file."""
+    import urllib.request
+    raw, src = None, None
+    local = os.path.join(ROOT, INDEX_FILENAME)
+    if os.path.exists(local):
+        raw, src = open(local, encoding="utf-8").read(), local
+    else:
+        try:
+            raw = urllib.request.urlopen(INDEX_REMOTE, timeout=15).read().decode("utf-8")
+            src = INDEX_REMOTE
+        except Exception as e:
+            if not quiet:
+                errors.append(f"[error] index unavailable: {e}")
+            return {}, src
+    index = {}
+    for line in raw.splitlines():
+        m = re.match(r"^\s{2}([\w-]+):\s*\{(.+)\}\s*$", line)
+        if not m:
+            continue
+        entry = {kv.group(1): strip_quotes(kv.group(2).strip()) for kv in re.finditer(r"(\w+):\s*([^,}]+)", m.group(2))}
+        if entry:
+            index[m.group(1)] = entry
+    return index, src
+
+
+def _clone_package(entry, pkg, tag, errors):
+    """git clone the package repo (git is the declared prerequisite); returns the clone dir or None."""
+    import subprocess
+    import tempfile
+    url = entry.get("repo")
+    if not url:
+        errors.append(f"[error] index entry {pkg} has no repo")
+        return None
+    tmp = tempfile.mkdtemp(prefix="vw-pkg-")
+    ref = tag or f"{pkg}-v{entry.get('version')}"
+    r = subprocess.run(["git", "clone", "--quiet", "--depth", "1", "--branch", ref, url, tmp],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        shutil.rmtree(tmp, ignore_errors=True)
+        errors.append(f"[error] clone {url}@{ref} failed: {(r.stderr or '').strip()[:200]}")
+        return None
+    return tmp
+
+
+def converge(label):
+    """Post-change convergence: reload, validate, run every mechanical projection."""
+    plugins, errors = load_plugins()
+    pkgs = load_packages(errors)
+    warns = []
+    validate(plugins, errors, warnings=warns)
+    if not errors:
+        validate_bindings(plugins, errors)
+        validate_bridges(plugins, errors)
+        validate_packages(plugins, pkgs, errors, warns)
+    for w in warns:
+        print(f"[warning] {w}")
+    for e in errors:
+        print(e)
+    if errors:
+        print(f"[{label}] validation failed ({len(errors)} errors) — fix before continuing")
+        return False
+    print(f"[{label}] validate: {len(plugins)} plugins green")
+    do_inject(plugins)
+    do_check_inject(plugins)
+    do_cmd_inject(plugins)
+    do_registry(plugins)
+    do_deploy()
+    return True
+
+
+def do_install(spec, args):
+    """Install a package from the index (or --path <dir> for a local/unregistered one): masters + connectors + commands, then converge."""
+    pkg, _, tag = spec.partition("@") if spec else ("", "", "")
+    path = None
+    if "--path" in args:
+        i = args.index("--path")
+        path = args[i + 1] if i + 1 < len(args) else None
+    if not pkg and not path:
+        print(__doc__)
+        return 2
+    # framework repo guard: library posture — the sandbox (test-repo) is the install target
+    if os.path.isdir(os.path.join(ROOT, "test-repo")) and not os.path.exists(AGENTS_MD):
+        print("[error] framework repo is library posture — install into an instance (e.g. cd test-repo)")
+        return 1
+    errors = []
+    if path:
+        src = path
+        if not os.path.exists(os.path.join(src, "PKG.yaml")):
+            print(f"[error] {src}/PKG.yaml not found (not a package directory)")
+            return 1
+    else:
+        index, _src = load_index(errors)
+        if pkg not in index:
+            print(f"[error] package {pkg} not in the index ({_src}) — third-party packages register via an index PR (#20 生态四问)")
+            for e in errors:
+                print(e)
+            return 1
+        entry = index[pkg]
+        if entry.get("trust", "") not in ("framework-bundled", "reviewed-3rd-party") and "--yes" not in args:
+            print(f"[error] package {pkg} trust level {entry.get('trust')!r} is not auto-installable — explicit --yes required (#12 安全面)")
+            return 1
+        src = _clone_package(entry, pkg, tag, errors)
+        for e in errors:
+            print(e)
+        if src is None:
+            return 1
+    try:
+        pkgm = parse_pkg(os.path.join(src, "PKG.yaml"))
+    except ValueError as e:
+        print(f"[error] PKG.yaml: {e}")
+        return 1
+    pid = str(pkgm.get("id") or pkg or os.path.basename(path))
+    if not path and pid != pkg:
+        print(f"[error] index says {pkg}, PKG.yaml says {pid} (index ↔ package mismatch — refuse)")
+        return 1
+    fw = framework_version()
+    if fw is not None:
+        m = re.fullmatch(r">=\s*(\d+)\.(\d+)", str(pkgm.get("compat") or ""))
+        if m and (int(m.group(1)), int(m.group(2))) > fw:
+            print(f"[error] package compat {pkgm.get('compat')} exceeds framework {'.'.join(map(str, fw))}")
+            return 1
+    dst = os.path.join(PLUGINS_DIR, "domains", pid)
+    if os.path.exists(dst):
+        print(f"[error] {pid} already installed — uninstall first (kernel uninstall {pid} --yes)")
+        return 1
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__"))
+    copied_conn, copied_cmd = [], []
+    csrc = os.path.join(src, "connectors")
+    if os.path.isdir(csrc):
+        for d in sorted(os.listdir(csrc)):
+            dd = os.path.join(CONNECTORS_DIR, d)
+            if os.path.exists(dd):
+                print(f"[warning] connector {d} already present — kept existing")
+                continue
+            os.makedirs(CONNECTORS_DIR, exist_ok=True)
+            shutil.copytree(os.path.join(csrc, d), dd, ignore=shutil.ignore_patterns("__pycache__", ".venv", "*.egg-info"))
+            copied_conn.append(d)
+    msrc = os.path.join(src, "command")
+    if os.path.isdir(msrc):
+        for d in sorted(os.listdir(msrc)):
+            dd = os.path.join(COMMANDS_DIR, d)
+            if os.path.exists(dd):
+                print(f"[warning] command {d} already present — kept existing")
+                continue
+            shutil.copytree(os.path.join(msrc, d), dd, ignore=shutil.ignore_patterns("__pycache__"))
+            copied_cmd.append(d)
+    if not path:
+        shutil.rmtree(src, ignore_errors=True)
+    print(f"[install] {pid}: masters -> .meta/plugins/domains/{pid}/"
+          + (f"; connectors: {', '.join(copied_conn)}" if copied_conn else "")
+          + (f"; commands: {', '.join(copied_cmd)}" if copied_cmd else ""))
+    converge("install")
+    return 0
+
+
+def do_uninstall(pkg, args):
+    """D6 uninstall: mechanical four-clear + convergence; data zones and credentials never touched."""
+    if not pkg:
+        print(__doc__)
+        return 2
+    if "--yes" not in args:
+        print("[error] uninstall needs --yes (removes package masters + projections; data zones stay — #20 D6)")
+        return 1
+    pkg_dir = os.path.join(PLUGINS_DIR, "domains", pkg)
+    if not os.path.exists(pkg_dir):
+        print(f"[error] {pkg} not installed")
+        return 1
+    try:
+        pkgm = parse_pkg(os.path.join(pkg_dir, "PKG.yaml"))
+    except ValueError as e:
+        print(f"[warning] PKG.yaml unreadable ({e}) — proceeding with mechanical removal")
+        pkgm = {}
+    members = set(pkgm.get("members") or [pkg])
+    import wikilib
+    removed_cmd = []
+    if os.path.isdir(COMMANDS_DIR):
+        for d in sorted(os.listdir(COMMANDS_DIR)):
+            fm_path = os.path.join(COMMANDS_DIR, d, "SKILL.md")
+            if not os.path.exists(fm_path):
+                continue
+            owners = _owner_list(wikilib.parse_frontmatter(open(fm_path, encoding="utf-8").read()).get("owner"))
+            if owners and owners[0] in members:
+                shutil.rmtree(os.path.join(COMMANDS_DIR, d))
+                sk = os.path.join(SKILLS_DIR, d)
+                if os.path.isdir(sk):
+                    shutil.rmtree(sk)
+                removed_cmd.append(d)
+    removed_conn = []
+    for c in pkgm.get("connectors") or []:
+        name = c.get("name")
+        if not name:
+            continue
+        cd = os.path.join(CONNECTORS_DIR, name)
+        if os.path.isdir(cd):
+            shutil.rmtree(cd)
+            removed_conn.append(name)
+        sk = os.path.join(SKILLS_DIR, name)
+        if os.path.isdir(sk) and not os.path.exists(os.path.join(COMMANDS_DIR, name)):
+            shutil.rmtree(sk)
+    shutil.rmtree(pkg_dir)
+    print(f"[uninstall] {pkg}: masters removed"
+          + (f"; commands: {', '.join(removed_cmd)}" if removed_cmd else "")
+          + (f"; connectors: {', '.join(removed_conn)}" if removed_conn else ""))
+    converge("uninstall")
+    do_residual(pkg, {pkg: pkgm})
+    un = pkgm.get("uninstall") or {}
+    if un.get("retains"):
+        print(f"[uninstall] retains (never touched): {', '.join(un['retains'])}")
+    if un.get("credentials"):
+        print(f"[uninstall] credentials stay on this machine — remove manually if desired: {', '.join(un['credentials'])}")
+    if un.get("processes"):
+        print(f"[uninstall] stop long-running executors if any: {', '.join(un['processes'])}")
+    return 0
+
+
+def do_list_remote():
+    """Index table with installed marks — GitHub is the marketplace page, this is the agent surface."""
+    errors = []
+    index, src = load_index(errors)
+    installed = load_packages([])
+    print(f"index: {src}")
+    for name, e in sorted(index.items()):
+        mark = "installed" if name in installed else "available"
+        print(f"  {name:<10} v{e.get('version', '?'):<5} compat {e.get('compat', '?'):<8} [{mark}] {e.get('summary', '')}")
+        print(f"  {'':<10} {e.get('repo', '')}  trust: {e.get('trust', '?')}")
+    for e in errors:
+        print(e)
+    return 0 if index else 1
+
+
+def do_upgrade(pkg):
+    """Reconciliation report (v1: report-only — upgrades go uninstall+install, per #20 逐包过不级联)."""
+    errors = []
+    index, src = load_index(errors)
+    installed = load_packages([])
+    fw = framework_version()
+    print(f"framework {'.'.join(map(str, fw)) if fw else '?'} — index: {src}")
+    rows = 0
+    for name, local in sorted(installed.items()):
+        lv = str(local.get("version", "?"))
+        e = index.get(name)
+        if not e:
+            print(f"  {name:<10} local v{lv} — not in the index (instance-local package, channel C)")
+        else:
+            rv = e.get("version", "?")
+            state = "up to date" if lv == rv else f"v{lv} -> v{rv}: kernel uninstall {name} --yes && kernel install {name}"
+            print(f"  {name:<10} local v{lv}  remote v{rv} — {state}")
+        rows += 1
+    if pkg and pkg not in installed:
+        print(f"  {pkg:<10} not installed")
+    if not rows:
+        print("  (no packages installed)")
+    for e in errors:
+        print(e)
+    return 0
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    # binding-round placeholders (#20 定稿 D5/D6): real wiring lands with the process round
-    if cmd in ("install", "uninstall", "list-remote", "upgrade"):
-        print(f"[pending] {cmd}: 占位——流程轮接通（#20 定稿；卸载语义先见 PKG.yaml uninstall 段 + residual 命令）")
-        return 1
+    if cmd == "install":
+        return do_install(sys.argv[2] if len(sys.argv) > 2 else "", sys.argv[3:])
+    if cmd == "uninstall":
+        return do_uninstall(sys.argv[2] if len(sys.argv) > 2 else None, sys.argv[3:])
+    if cmd == "list-remote":
+        return do_list_remote()
+    if cmd == "upgrade":
+        return do_upgrade(sys.argv[2] if len(sys.argv) > 2 else None)
     plugins, errors = load_plugins()
     pkgs = load_packages(errors)
     if cmd == "pkg":

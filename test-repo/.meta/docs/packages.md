@@ -82,7 +82,10 @@ uninstall:              # declaration, never executable hooks
 | `validate --scope <pkg>` | single-package tolerant mode (D3): deps absent outside the package degrade to warnings — the CI shape for package repos post-split, run with a framework checkout alongside |
 | `pkg` | package inventory: members, connectors, implicit core remainder |
 | `residual <pkg>` | D6 residual scan: greps handwritten AGENTS region + profile/language/calendar/todo/cron anchors for member references (the kernel-managed injection region is skipped — it is cleaned mechanically) |
-| `install` / `uninstall` / `list-remote` / `upgrade` | placeholders — wired in the process round, against `INDEX.yaml` pointing at the per-package repos |
+| `install <pkg>[@tag]` | resolve the index → trust gate (`--yes` for non-auto levels) → clone the package repo → copy masters/connectors/commands → converge. `--path <dir>` installs an unregistered local package (channel C) |
+| `uninstall <pkg> --yes` | D6 four-clear (masters/commands/connectors/skills) + convergence + residual scan + retains/credentials reminders — data never touched |
+| `list-remote` | index table with installed marks |
+| `upgrade` | reconciliation report (local vs index); upgrades run uninstall+install, per-package, never cascaded |
 
 *Why scope mode exists before the split:* after the split the framework repo and each package repo no longer contain the full graph — validate would be blind exactly where it matters most. Absence-tolerance turns "plugin missing" from an error into a listed warning, keeping every repo self-checkable.
 

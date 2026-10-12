@@ -62,8 +62,8 @@ The core deployment includes only vault and general wiki capabilities. External 
 
 ## Upgrade and uninstall
 
-- **Upgrade**: re-copy `.meta/` and `.agents/skills/`, rerun `all` (per-package `kernel upgrade` lands with the process round — see [packages.md](packages.md)). Framework components are separated from data zones; `wiki/` and `vault/` are unaffected
-- **Uninstall**: delete the two trees plus the AGENTS.md injection region block. Package-level removal (`kernel uninstall` + residual scan) lands with the process round; until then the same effect is manual: remove `domains/<pkg>/`, rerun `all`, and grep the anchors the [packages.md](packages.md) uninstall contract lists. The data zones are yours—dispose of them as you see fit
+- **Upgrade**: framework — re-copy `.meta/` and `.agents/skills/`, rerun `all`; packages — `kernel upgrade` reports drift, then `kernel uninstall <pkg> --yes && kernel install <pkg>` per package (never cascaded, see [packages.md](packages.md)). Data zones are unaffected
+- **Uninstall**: package-level — `kernel uninstall <pkg> --yes` (four-clear + residual scan + reminders; data zones stay); the whole framework — delete the two trees plus the AGENTS.md injection region block. The data zones are yours—dispose of them as you see fit
 
 ## FAQ
 
