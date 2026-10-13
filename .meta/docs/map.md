@@ -8,7 +8,7 @@
 | Filing feedback — which repo owns it | [agent-behavior.md](agent-behavior.md) §Routing |
 | How packages / install / upgrade / migrations work (design + decision ledger) | [packages.md](packages.md) |
 | Deploying an instance; the two postures; first steps | [quickstart.md](quickstart.md) |
-| Instance git usage (snapshots, red lines, recovery) | [instance-git.md](instance-git.md) |
+| Instance git usage (snapshots, red lines, recovery) | the [instance-git plugin](../plugins/core/instance-git/PLUGIN.md) (core 21) |
 | Framework mechanics: projections, bridges, injection, inject tiers | [mechanics.md](mechanics.md) |
 | (Un)install history, package lifecycle | [mechanics.md](mechanics.md) §7 + [packages.md](packages.md) |
 | Experiments: sandbox or local | [sandbox.md](sandbox.md) |

@@ -51,7 +51,7 @@ Expected: core 20 (plus whichever packages you have installed) pass validate, pa
 
 ## Git snapshots
 
-An instance is real use accumulating — `git init` at the vault root if you haven't (posture A's clone already has history). The agent commits at transaction close (`type: summary`, the same shape as a log entry); you never manage git by hand unless you want to. The minimal contract and the recovery entrance (`git log -- <page>` → `git checkout`) are in [instance-git.md](instance-git.md).
+An instance is real use accumulating — `git init` at the vault root if you haven't (posture A's clone already has history). The agent commits at transaction close (`type: summary`, the same shape as a log entry); you never manage git by hand unless you want to. The minimal contract, the mechanical red-line audit, and the recovery entrance (`git log -- <page>` → `git checkout`) live in the [instance-git plugin](../plugins/core/instance-git/PLUGIN.md) (a core plugin — it rides with the framework).
 
 ## One-word daily commands
 

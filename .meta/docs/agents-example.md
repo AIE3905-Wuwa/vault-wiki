@@ -15,7 +15,7 @@ rewritten freely — the agent never edits outside the injection region.>
 
 ## Git
 
-Instance snapshots follow `.meta/docs/instance-git.md` — the agent commits at transaction close (`type: summary`); beyond that, git usage is the human's own.
+Instance snapshots follow the instance-git plugin (core) — the agent commits at transaction close (`type: summary`); beyond that contract, git usage is the human's own.
 
 <!-- wiki-inject:start -->
 
