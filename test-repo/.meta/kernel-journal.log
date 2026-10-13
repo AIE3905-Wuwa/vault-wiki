@@ -8,3 +8,11 @@
 2026-10-13T00:58:28 upgrade tpk 0.1->0.2 changed=1
 2026-10-13T00:58:28 clear tpk 0.1->0.2 verify-clean
 2026-10-13T00:58:28 uninstall tpk v0.2
+2026-10-13T08:58:57 warn+ cuhksz 0->0.1 items=init
+2026-10-13T08:58:57 install cuhksz v0.1 subset(-bb-quiz,bb-teach) staged=init
+2026-10-13T08:58:57 clear cuhksz 0->0.1 verify-clean
+2026-10-13T08:58:57 uninstall cuhksz v0.1
+2026-10-13T08:59:12 warn+ cuhksz 0->0.1 items=init
+2026-10-13T08:59:12 install cuhksz v0.1 subset(-bb-quiz,bb-teach) staged=init
+2026-10-13T08:59:32 clear cuhksz 0->0.1 verify-clean
+2026-10-13T08:59:32 uninstall cuhksz v0.1

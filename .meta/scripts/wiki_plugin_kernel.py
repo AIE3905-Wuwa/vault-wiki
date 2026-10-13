@@ -802,11 +802,12 @@ def validate_packages(plugins, pkgs, errors, warnings):
             seen_member[mem] = pid
         if pid not in members:
             errors.append(f"[error] PKG {pid}: family root {pid} must be a member (D5: roots are never prunable)")
-        closure = {pid} | {p for p in plugins if reaches_plugin(plugins, p, pid)}
-        for extra in sorted(set(members) - closure):
-            errors.append(f"[error] PKG {pid}: member {extra} declared but outside the family closure (depends chain never reaches {pid})")
-        for miss in sorted(closure - set(members)):
-            errors.append(f"[error] PKG {pid}: {miss} is in the family closure but missing from members (roster drift)")
+        if all(m in plugins for m in members):  # full presence → authoring invariant (roster == closure); subsets exempt (site invariant above covers them)
+            closure = {pid} | {p for p in plugins if reaches_plugin(plugins, p, pid)}
+            for extra in sorted(set(members) - closure):
+                errors.append(f"[error] PKG {pid}: member {extra} declared but outside the family closure (depends chain never reaches {pid})")
+            for miss in sorted(closure - set(members)):
+                errors.append(f"[error] PKG {pid}: {miss} is in the family closure but missing from members (roster drift)")
         absent = [mem for mem in members if mem not in plugins]
         if pid not in plugins:
             errors.append(f"[error] PKG {pid}: family root {pid} must be installed (D5: roots are never prunable)")
