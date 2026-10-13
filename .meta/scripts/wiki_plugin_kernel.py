@@ -1107,7 +1107,7 @@ def do_install(spec, args, prev_version=None):
         print(f"[error] {pid} already installed — uninstall first (kernel uninstall {pid} --yes)")
         return 1
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "connectors", "command", "README.md", "__pycache__", "migrations",
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", ".meta", "connectors", "command", "README.md", "__pycache__", "migrations",
                                                             *sorted(pruned)))
     copied_conn, copied_cmd = [], []
     csrc = os.path.join(src, "connectors")
