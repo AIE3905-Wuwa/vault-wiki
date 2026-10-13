@@ -1073,6 +1073,10 @@ def do_install(spec, args, prev_version=None):
         if idx_members and idx_members != pkg_members:
             print(f"[error] index members {sorted(idx_members)} != PKG.yaml members {sorted(pkg_members)} (index <-> package drift — refuse)")
             return 1
+        idx_ver = str(entry.get("version") or "").strip()
+        if idx_ver and idx_ver != str(pkgm.get("version")).strip():
+            print(f"[error] index version v{idx_ver} != PKG.yaml version v{pkgm.get('version')} (release metadata drift — the tag would install but never reconcile with `pkg`/`upgrade`; refuse)")
+            return 1
     members_all = [str(m) for m in (pkgm.get("members") or [])]
     pruned = set()
     if without:
