@@ -22,7 +22,7 @@ Dev rules of the vault-wiki framework. The framework repo is a library: no insta
 Development happens in the **template** (this repository); real use happens in an **instance** — a separately deployed vault whose `.meta/` and `.agents/skills/` derive from the template. Two repos, two rule sets:
 
 - The template stays a library: no instance data, no AGENTS.md, no run log (the opening rule). Mechanical verification that needs an AGENTS.md context runs in a **local sandbox** — a scratch deployment of the template (see [`.meta/docs/sandbox.md`](.meta/docs/sandbox.md)); the in-repo `test-repo/` sandbox is local-only and untracked since 2026-10-13
-- Instance-side upstream updates: fetch/pull the template → diff `.meta/` and `.agents/` → sync selectively (an instance may carry packages and local state the template does not know) → at the instance root `kernel all` → `validate` green. Never blind-copy over an instance that has pending migrations
+- Instance-side upstream updates: fetch/pull the template → diff `.meta/` and `.agents/` → sync selectively (an instance may carry packages and local state the template does not know) — the diff must always include `.meta/docs/` (agent-facing docs are instance runtime dependencies, not optional reading) → at the instance root `kernel all` → `validate` green. Never blind-copy over an instance that has pending migrations
 - Instances report framework bugs back as template issues — an instance's own wiki never becomes the framework's change trail
 
 ## Data red lines — never in git

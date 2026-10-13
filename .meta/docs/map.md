@@ -1,0 +1,19 @@
+# Docs map — what to read when
+
+> The routing table for `.meta/docs/` (framework) and package-repo docs. The entry index for agents; skills point here, the documents stay the source of truth.
+
+| Situation | Read |
+|---|---|
+| User reports dissatisfaction with agent behavior; behavior self-audit | [agent-behavior.md](agent-behavior.md) — feedback handling (consent gate) → routing → the seven-step standard |
+| Filing feedback — which repo owns it | [agent-behavior.md](agent-behavior.md) §Routing |
+| How packages / install / upgrade / migrations work (design + decision ledger) | [packages.md](packages.md) |
+| Deploying an instance; the two postures; first steps | [quickstart.md](quickstart.md) |
+| Instance git usage (snapshots, red lines, recovery) | [instance-git.md](instance-git.md) |
+| Framework mechanics: projections, bridges, injection, inject tiers | [mechanics.md](mechanics.md) |
+| (Un)install history, package lifecycle | [mechanics.md](mechanics.md) §7 + [packages.md](packages.md) |
+| Experiments: sandbox or local | [sandbox.md](sandbox.md) |
+| Development rules, commit flow, template + instance workflow | [CONTRIBUTING.md](../../CONTRIBUTING.md) (repo root) |
+| Day-to-day usage loops | [usage.md](usage.md) |
+| What the framework is, intro | [intro.md](intro.md) |
+| Package-side plugin docs (bb family, lark family, …) | the owning `pkg-*` repo's plugin masters |
+| AGENTS.md seed / log seed examples | [agents-example.md](agents-example.md), [log-example.md](log-example.md) |

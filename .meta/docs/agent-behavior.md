@@ -7,8 +7,9 @@
 When the user reports dissatisfaction with agent behavior:
 
 1. **Immediate fix first** — stop the offending pattern in-session, never continue it while analyzing
-2. **Judge the responsible layer** — plugin constraint? framework? pure execution?
-3. **Systematic → behavior analysis** (below); one-off → in-session fix + one log line, no issue
+2. **Judge the responsible layer** — plugin constraint? framework? pure execution? Not a plugin/kernel matter → no analysis: respond to the user directly
+3. **Consent gate** — if it may be a plugin/kernel problem, offer the self-audit to the user (recommended, never forced); start only on consent
+4. **Systematic → behavior analysis** (below); one-off → in-session fix + one log line, no issue
 
 This face was previously undeclared (an e-class vacuum live sample, #33's improvised handling).
 
