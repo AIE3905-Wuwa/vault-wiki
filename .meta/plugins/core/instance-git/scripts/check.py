@@ -70,12 +70,12 @@ def check(ctx):
     tops = {rel.split("/")[0] for rel in tracked if "/" in rel}
     if remotes and tops & SENSITIVE_TOP:
         issues.append({"level": "warning", "message": f"instance-git: remote(s) configured ({', '.join(remotes)}) while sensitive faces ({', '.join(sorted(tops & SENSITIVE_TOP))}/) are tracked — confirm private; public remotes are out of the question"})
-    # 4. entity self-git tracked by the parent
+    # 4. entity self-git tracked by the parent (a gitlink shows as bare "projects/<name>", a stray add as "projects/<name>/...")
     pdir = os.path.join(root, "projects")
     if os.path.isdir(pdir):
         for name in sorted(os.listdir(pdir)):
             if os.path.isdir(os.path.join(pdir, name, ".git")):
-                leaked = [rel for rel in tracked if rel.startswith(f"projects/{name}/")]
+                leaked = [rel for rel in tracked if rel == f"projects/{name}" or rel.startswith(f"projects/{name}/")]
                 if leaked:
-                    issues.append({"level": "warning", "message": f"instance-git: projects/{name}/ keeps its own git yet {len(leaked)} file(s) tracked by the parent (red line 3 — disclose, never host)"})
+                    issues.append({"level": "warning", "message": f"instance-git: projects/{name}/ keeps its own git yet {len(leaked)} entr{'y' if len(leaked) == 1 else 'ies'} tracked by the parent (red line 3 — disclose, never host)"})
     return issues
