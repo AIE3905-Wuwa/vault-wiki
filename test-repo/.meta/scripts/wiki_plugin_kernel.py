@@ -16,6 +16,14 @@ Usage:
   python .meta/scripts/wiki_plugin_kernel.py registry    # rebuild the registry.yaml plugin section (idempotent)
   python .meta/scripts/wiki_plugin_kernel.py deploy      # sync command and connector skill deployment copies (idempotent)
   python .meta/scripts/wiki_plugin_kernel.py all         # validate + inject + registry + deploy
+  python .meta/scripts/wiki_plugin_kernel.py plan <pkg>  # dependency plan for a package about to land
+  python .meta/scripts/wiki_plugin_kernel.py install <pkg> [--yes] [--without ...]  # fetch from registry/path -> domains/<pkg>/ (owner/repo needs --yes)
+  python .meta/scripts/wiki_plugin_kernel.py uninstall <pkg> [--yes]  # remove package + projections; stages teardown (x->0) when declared
+  python .meta/scripts/wiki_plugin_kernel.py list-remote # registry catalog (INDEX.yaml): packages, versions, compat floors
+  python .meta/scripts/wiki_plugin_kernel.py migrate [<pkg>] [--clear] [--force]  # pending semantic migrations: status / clear (verify- and residual-gated)
+  python .meta/scripts/wiki_plugin_kernel.py upgrade [<pkg>]  # compare versions against the registry; apply updates
+  python .meta/scripts/wiki_plugin_kernel.py pkg         # installed packages: members, versions, connectors
+  python .meta/scripts/wiki_plugin_kernel.py residual <pkg>  # anchor-surface reference scan (the default teardown gate)
 
 The manifest is a minimal YAML subset: top-level `key: value`, `key: []`, block lists
 (`  - item`), one-level field dicts (`  name: description`); double-quoted values are
@@ -1223,6 +1231,9 @@ def do_uninstall(pkg, args):
         print(f"[uninstall] credentials stay on this machine — remove manually if desired: {', '.join(un['credentials'])}")
     if un.get("processes"):
         print(f"[uninstall] stop long-running executors if any: {', '.join(un['processes'])}")
+    for d in (os.path.join(PLUGINS_DIR, "domains"), CONNECTORS_DIR):
+        if os.path.isdir(d) and not os.listdir(d):
+            os.rmdir(d)  # empty containers leave no residue
     return 0
 
 
@@ -1461,6 +1472,7 @@ def _ast_gate(path):
 
 def _run_verify(py_path):
     """Execute a staged verify(ctx) in-process; returns (issues, gate_problems)."""
+    sys.dont_write_bytecode = True  # staged code is use-and-delete; leave no __pycache__ behind
     gate = _ast_gate(py_path)
     if gate:
         return None, gate

@@ -10,7 +10,7 @@ rewritten freely — the agent never edits outside the injection region.>
 
 ## Layout
 
-<vault root>: `vault/` real assets · `wiki/` the md world · `projects/` project containers
+<vault root>: `vault/` real assets · `wiki/` the md world
 · `.meta/` + `.agents/skills/` the framework body (packages under `.meta/plugins/domains/`).
 
 <!-- wiki-inject:start -->

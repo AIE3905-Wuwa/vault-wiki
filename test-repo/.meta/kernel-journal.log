@@ -42,3 +42,15 @@
 2026-10-13T09:13:07 warn+ tpk teardown staged (x->0)
 2026-10-13T09:13:07 uninstall tpk v0.3
 2026-10-13T09:13:29 clear tpk 0.3->0 verify-clean
+2026-10-13T09:18:32 warn+ cuhksz 0->0.2 items=init
+2026-10-13T09:18:32 install cuhksz v0.2 staged=init
+2026-10-13T09:18:32 clear cuhksz 0->0.2 verify-clean
+2026-10-13T09:18:32 warn+ cuhksz teardown staged (x->0)
+2026-10-13T09:18:32 uninstall cuhksz v0.2
+2026-10-13T09:18:32 clear cuhksz 0.2->0 verify-clean
+2026-10-13T09:58:34 warn+ cuhksz 0->0.2 items=init
+2026-10-13T09:58:34 install cuhksz v0.2 staged=init
+2026-10-13T09:58:34 clear cuhksz 0->0.2 verify-clean
+2026-10-13T09:58:34 warn+ cuhksz teardown staged (x->0)
+2026-10-13T09:58:34 uninstall cuhksz v0.2
+2026-10-13T09:58:34 clear cuhksz 0.2->0 verify-clean

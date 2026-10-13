@@ -1,7 +1,7 @@
 ---
 name: wiki_plugin_kernel
 owner: framework
-description: "Kernel and mechanics reference: the projector's seven subcommands (ls/validate/audit/inject/registry/deploy/all) + a full account of the plugin mechanics — manifest / dependencies / the three projections / command binding / bridge rules / layering principles (a bb-domain worked example). Triggers on: 插件内核, wiki_plugin_kernel, kernel, 注入块更新, 投影重建, 插件机制, 更新注入."
+description: "Kernel and mechanics reference: the projector's subcommands (7 convergence — ls/validate/audit/inject/registry/deploy/all — plus 8 package-lifecycle: plan/install/uninstall/list-remote/migrate/upgrade/pkg/residual) + a full account of the plugin mechanics — manifest / dependencies / the three projections / command binding / bridge rules / layering principles (a bb-domain worked example). Triggers on: 插件内核, wiki_plugin_kernel, kernel, 注入块更新, 投影重建, 插件机制, 更新注入."
 ---
 
 # wiki_plugin_kernel: kernel and mechanics reference
@@ -19,6 +19,19 @@ description: "Kernel and mechanics reference: the projector's seven subcommands 
 | `registry` | rebuilds the registry.yaml plugin section (from each manifest's `fields`) | registry.yaml |
 | `deploy` | syncs skill masters (`.meta/command/*/` commands + `connectors/*/` connectors) → `.agents/skills/` copies; orphan copies are reported only (deletion belongs to the human) | copies |
 | `all` | validate + inject + registry + deploy in one step | all of the above |
+
+Package lifecycle (full wizard protocol and judgment rules: `.meta/command/plugin/SKILL.md`):
+
+| Subcommand | Purpose | Disk writes |
+|---|---|---|
+| `plan <pkg>` | dependency plan for a package about to land | none |
+| `install <pkg> [--yes] [--without ...]` | fetch from registry or path → `domains/<pkg>/`; owner/repo specs need `--yes` (unknown trust); stages pending migrations | package dir, projections, migrations staging |
+| `uninstall <pkg> [--yes]` | remove package + projections; stages teardown (x->0) when declared | inverse of install |
+| `list-remote` | registry catalog (INDEX.yaml): packages, versions, compat floors | none |
+| `migrate [<pkg>] [--clear] [--force]` | pending semantic migrations: status / clear (verify- and residual-gated, use-and-delete) | migrations staging |
+| `upgrade [<pkg>]` | compare versions against the registry; apply via silent reinstall | as install |
+| `pkg` | installed packages: members, versions, connectors | none |
+| `residual <pkg>` | anchor-surface reference scan (the default teardown gate) | none |
 
 ## Typical scenarios
 
@@ -81,7 +94,7 @@ description: "Kernel and mechanics reference: the projector's seven subcommands 
 ## Boundaries
 
 - The script touches only four sites: plugin directories in/out, injection-region marker blocks, the registry plugin section, and the skill deployment copies; the protocol / reserved sections and the AGENTS.md handwritten region are never touched
-- Pure standard library, zero dependencies (Python 3); Chinese output
+- Pure standard library, zero dependencies (Python 3); English output
 - The data-zone derived layer (`wiki/index.md`, `tags.md`, `hot.md`, `log.md`) is not this CLI's business — that is `pipeline.py` (`index` / `tags` / `hot` / `log` / `verify`), invoked by the post-write pipelines of map / save
 
 ## Parameters
