@@ -116,13 +116,13 @@ Derived pages and projections are two applications of one philosophy: projection
 
 ## 7. (Un)install Lifecycle
 
-The semantic flow of (un)installing goes through the plugin command, where the agent does the semantic part; the mechanical steps are this CLI.
+The semantic flow of (un)installing goes through the plugin command, where the agent does the semantic part; the mechanical steps are this CLI. Since the split (2026-10-12) **packages are the install unit and this lifecycle is kernel-driven** — the authoritative accounts live in [packages.md](packages.md) (package model, the migrations algebra, the uninstall contract) and in `.meta/command/plugin/SKILL.md` (the wizard protocol). What follows is the historical per-plugin flow, retained for the record; the install steps still describe authoring a new plugin inside the framework repo.
 
 Install, five steps: prepare the three pieces under `.meta/plugins/<id>/`; `validate` — errors block; `all` — projections arrive; smoke test — `audit <id>`, plus a walk-through of the key flows per PLUGIN.md; log a plugin line.
 
-Upgrade, three steps: edit the plugin, bump `version`, add a Changelog line; `all`; log line.
+Upgrade, three steps: edit the plugin, bump `version`, add a Changelog line; `all`; log line. Package-level upgrades (`kernel upgrade`) additionally stage semantic migrations — see packages.md.
 
-Uninstall, four steps: `validate` — if any plugin depends on it, blocked, unless the user explicitly cascades; move the directory out — archived and kept, physical deletion forever belongs to humans; `all` — the projections vanish with it; log line.
+Uninstall: superseded by the package-level `kernel uninstall <pkg> --yes` (four-clear + residual scan + teardown staging, see packages.md). The old per-plugin flow — `validate` blocks dependents → move the directory out (archived, physical deletion belongs to humans) → `all` — applied before packages existed.
 
 Discipline: script errors always block, warnings only report; versions advance along the changelog — no pre-reserving or skipping numbers.
 

@@ -35,7 +35,7 @@ The bb domain loop; one semester's rhythm.
 
 The standard flow for changing the framework — see AGENTS "commit flow" for details: branch off the latest master; before touching manifests or commands, read `log.md` to align with current state and next steps; `kernel all` green; small commits in the `module: summary` format; push and open a PR; the manager reviews and merges.
 
-**Installing a new domain**, bringing an external source in: copy the corresponding connector into `connectors/`; the plugin command installs the domain plugins; on first use read the connector skill disclosure, e.g. bb-cli's credentials and usage. The domain growth path and its decision criteria are in the mechanics doc, "How Domains Grow" section.
+**Installing a new domain**, bringing an external source in: `kernel list-remote` shows the catalog; `kernel install <pkg> --yes` lands the package — plugins, commands, and in-repo connectors arrive in one step (the bb course domain brings bb-cli with it; lark declares the external lark-cli; email mail-cli). Credentials stay on the local machine; on first use read the connector skill disclosure, e.g. bb-cli's credentials and usage. The domain growth path and its decision criteria are in the mechanics doc, "How Domains Grow" section.
 
 **Experiments** always land in the test-repo sandbox or locally. Sandbox usage is in `.meta/docs/sandbox.md`; sandbox experiment content never enters history — conclusions travel via conversation reports or docs.
 

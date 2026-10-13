@@ -1,6 +1,6 @@
 # Quickstart
 
-> Reader: anyone who wants to install the framework into their own directory—an Obsidian vault or any folder works—or the agent doing it for you. About ten minutes end to end; every step has been rehearsed and verified against a clean directory. First verified 2026-09-13; updated 2026-10-04 to 28 plugins, 13 commands; 2026-10-06 counts refreshed to 35 plugins; 2026-10-12 package layout — core 20 + 5 domain packages (see [packages.md](packages.md)).
+> Reader: anyone who wants to install the framework into their own directory—an Obsidian vault or any folder works—or the agent doing it for you. About ten minutes end to end; every step has been rehearsed and verified against a clean directory. First verified 2026-09-13; updated 2026-10-04 to 28 plugins, 13 commands; 2026-10-06 counts refreshed to 35 plugins; 2026-10-12 package layout — core 20 + 5 domain packages (see [packages.md](packages.md)); 2026-10-13 kernel install/upgrade/migrate replace the copy-loop model for packages.
 
 ## What you get
 
@@ -20,7 +20,7 @@
 
 **① Get the framework**: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git`, or download the ZIP and unzip it (the old personal-repo address redirects).
 
-**② Copy two trees** to the target vault root: `.meta/` and `.agents/skills/`. Plugin masters, command masters and copies, protocol artifacts, and mechanical scripts all live there. Minimal-core variant: copy only `.meta/plugins/core/` + `.meta/protocol/` + `.meta/scripts/` + `.meta/VERSION` + `.meta/command/` (the 20 framework plugins, no domain packages); add a package later by copying its `domains/<pkg>/` directory and rerunning `all`.
+**② Copy two trees** to the target vault root: `.meta/` and `.agents/skills/`. Plugin masters, command masters and copies, protocol artifacts, and mechanical scripts all live there. The clone ships **core 20 only** — no domain packages. Packages are added per need from the registry: `python3 .meta/scripts/wiki_plugin_kernel.py install <pkg> --yes` (see [packages.md](packages.md)); offline alternative — copy a package's `domains/<pkg>/` directory in and rerun `all`.
 
 **③ Write the target vault's AGENTS.md**: draft the shell yourself—one identity paragraph plus a layout description; copy the injection region marker block verbatim from [agents-example.md](agents-example.md), not a single character changed—from `<!-- wiki-inject:start -->` to `<!-- wiki-inject:end -->`—it is the sole source of the structural contract. If the target vault already has an AGENTS.md, paste in only the injection region block.
 
@@ -32,7 +32,7 @@
 python .meta/scripts/wiki_plugin_kernel.py all
 ```
 
-Expected: all plugins on disk pass validate (core + whichever packages you copied), package rosters reconcile; injection region unchanged; command copies in sync. Any error means the copy is incomplete—fix it and rerun.
+Expected: core 20 (plus whichever packages you have installed) pass validate, package rosters reconcile; injection region unchanged; command copies in sync. Any error means the copy is incomplete—fix it and rerun.
 
 ## First-run verification
 
@@ -58,12 +58,12 @@ Command details are as disclosed in each SKILL.md under `.agents/skills/`—thir
 
 ## Optional domain plugins
 
-The core deployment includes only vault and general wiki capabilities. External domains are enabled as needed. The bb course domain connects to Blackboard via the `connectors/bb-cli/` connector, credentials stored only on the local machine; the lark domain connects to Feishu via lark-cli; the email domain connects to a personal mailbox. How to connect: copy the corresponding connector and use the plugin command to install the domain plugin; on first use, each connector's skill ships its own disclosure.
+The core deployment includes only vault and general wiki capabilities; external domains are enabled as needed. `kernel list-remote` shows the catalog; `kernel install <pkg> --yes` lands a package — plugins, commands, and in-repo connectors in one step (the bb course domain brings bb-cli, connecting to Blackboard with credentials stored only locally; lark declares the external lark-cli for Feishu; email brings mail-cli for a personal mailbox). On first use, each connector's skill ships its own disclosure.
 
 ## Upgrade and uninstall
 
-- **Upgrade**: framework — re-copy `.meta/` and `.agents/skills/`, rerun `all`; packages — `kernel upgrade` reports drift, then `kernel uninstall <pkg> --yes && kernel install <pkg>` per package (never cascaded, see [packages.md](packages.md)). Data zones are unaffected
-- **Uninstall**: package-level — `kernel uninstall <pkg> --yes` (four-clear + residual scan + reminders; data zones stay); the whole framework — delete the two trees plus the AGENTS.md injection region block. The data zones are yours—dispose of them as you see fit
+- **Upgrade**: framework — re-copy `.meta/` and `.agents/skills/` over the old ones, rerun `all` (a kernel self-update command is designed but not yet shipped; the copy is manual until then); packages — `kernel upgrade` compares against the registry and applies per package (silent reinstall, never cascaded). A new version may stage **semantic migrations** — the kernel warns on three faces and walks you through; see [packages.md](packages.md). Data zones are unaffected
+- **Uninstall**: package-level — `kernel uninstall <pkg> --yes` (four-clear; a declared teardown stages the semantic-deletion warning with a residual gate; data zones stay, lapsing into the deprecated posture); the whole framework — delete the two trees plus the AGENTS.md injection region block. The data zones are yours—dispose of them as you see fit
 
 ## FAQ
 

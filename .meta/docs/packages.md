@@ -1,6 +1,6 @@
 # Packages
 
-> Design record of the binding round (issue #20 convergence, 2026-10-12). Mechanism and — more importantly — the reasons behind each decision. Authoritative mechanics live in the kernel (`wiki_plugin_kernel.py`) and in the `PKG.yaml` declarations; this page explains why they are shaped this way.
+> Design record of the split-improvement phase (2026-10-12 → 10-13: binding round issue #20, discovery/download/update, teardown). Mechanism and — more importantly — the reasons behind each decision. Authoritative mechanics live in the kernel (`wiki_plugin_kernel.py`) and in the `PKG.yaml` declarations; this page explains why they are shaped this way.
 
 ## Layout: directory == package
 
@@ -85,13 +85,31 @@ uninstall:              # declaration, never executable hooks
 | `install <pkg>[@tag]` | resolve the [registry](https://github.com/AIE3905-Wuwa/registry) index (members reconciled against PKG.yaml) → trust gate → clone → copy masters/connectors/commands → converge. `install <owner/repo> --yes` installs an unindexed repository (trust: unknown); `--path <dir>` installs a local one (channel C) |
 | `uninstall <pkg> --yes` | D6 four-clear (masters/commands/connectors/skills) + convergence + residual scan + retains/credentials reminders — data never touched |
 | `list-remote` | index table with installed marks |
-| `upgrade` | reconciliation report (local vs index); upgrades run uninstall+install, per-package, never cascaded |
+| `plan <pkg>` | dependency disclosure before a package lands |
+| `migrate [<pkg>] [--clear] [--force]` | pending semantic migrations: status / clear (author verify + teardown residual gate; use-and-delete) — see [Migrations](#migrations-the-algebra-0--x--y--0) below |
+| `upgrade` | reconciliation report (local vs index); applying runs a **silent reinstall** per package (never cascaded) — member deltas, changelog excerpts, chained migration staging |
 
 *Why scope mode exists before the split:* after the split the framework repo and each package repo no longer contain the full graph — validate would be blind exactly where it matters most. Absence-tolerance turns "plugin missing" from an error into a listed warning, keeping every repo self-checkable.
 
 ## Uninstall contract (D6)
 
 No executable uninstall hooks — that would be a **third execution surface** (after inject text and connectors), running at a privileged moment; the security model declines. Instead the package *declares* its deletion semantics (`uninstall:` above) and the flow is: kernel mechanical four-clear (directory / injection / registry / projections) → residual scan output → agent semantic finish per the declaration (credential reminders, process stops, bridge registration lines) behind a confirmation gate. **Data and credentials are never auto-deleted** — the freedom to delete belongs to the human; retained data zones lapse into the deprecated posture.
+
+## Migrations: the algebra 0 → x → y → 0
+
+Package state changes are **semantic migrations carried by declarations, not hooks**. Three kinds close the algebra:
+
+| Kind | Files | Staged when | Lives until |
+|---|---|---|---|
+| init (0→x) | `migrations/init.md` (+ optional `init.py`) | fresh install | verify-clean `--clear` |
+| migrate (x→y) | `migrations/x-to-y.md`, frozen at release | an upgrade landing that version | verify-clean `--clear` |
+| teardown (x→0) | `migrations/teardown.md` | **every install, dormant**; consumed at uninstall | residual-clean `--clear` |
+
+Mechanics: the kernel stages declarations into `.meta/migrations/<pkg>/` (kernel zone — never inside the package dir), keeps a ledger (`pending.json`), and raises the **tri-face warning**: a banner on every kernel invocation · `validate` stays red — mechanical blessing is withheld until the semantic step is done · a kernel-managed block lands in the AGENTS injection region so every session sees it. Clearing runs the author's `verify(ctx)` — AST-gated (read-only, stdlib-only) — then deletes the staged files (**use-and-delete**: declarations are useful precisely once; assertions that hold forever belong in the package's `scripts/check.py` — the judgment split rule).
+
+**Sweep symmetry** keeps the ledger honest without a cron: migrate-kind entries die with the package (uninstall sweeps them), teardown-kind entries die with reinstall (install sweeps them). The dormant `PKG.yaml` copy in the staging directory doubles as a **presence marker**: after a manual `rm -rf` of a package directory, the marker lets the kernel sweep the full mechanical residue — commands, connectors, skills, ledger, banner. Self-healing with no hooks.
+
+**Teardown gate**: teardown declares semantic deletions; with no author script the kernel scans the anchor surfaces (the AGENTS handwritten region, profile / language / calendar / todo / cron pages — the kernel-managed injection region is skipped) for member references — word-boundary, deliberately broad: a layout line naming the territory, a cognition registration line, a calendar source key are all references the human side must finish deleting. Clean anchors clear; hits block `--clear` (override `--force`, on your own judgment). The kernel journal (`.meta/kernel-journal.log`, rolling cap of 500 lines, git-tracked) records the mechanical chain — install / warn+ / clear / uninstall / sweep; mechanical facts only, semantic narrative stays in the instance wiki's log.
 
 ## Manifest schema
 
@@ -107,3 +125,6 @@ No executable uninstall hooks — that would be a **third execution surface** (a
 | D4 | instance-local packages live in `domains/` too | one semantic: package directory == install unit; zero-index private packages |
 | D5 | subset grammar fixed now, `--without` opens on demand | validator format never breaks; first real subset user triggers it |
 | D6 | declarative uninstall, no hooks | third execution surface declined; deletion knowledge becomes reviewable data |
+| D7 | migrations are declarations closing 0→x→y→0; teardown ships dormant with every install | semantic change rides reviewable files; the x→0 case must be declared *before* the package is gone |
+| D8 | sweep symmetry + dormant PKG.yaml presence marker | ledger truth without a cron; manual `rm -rf` still self-heals (no hooks anywhere) |
+| D9 | teardown gate = residual scan by default, author scripts optional | D6's no-hooks principle extended to deletion *verification* — zero-script packages still get a semantic gate |

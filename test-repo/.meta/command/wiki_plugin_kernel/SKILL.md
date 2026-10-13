@@ -33,6 +33,8 @@ Package lifecycle (full wizard protocol and judgment rules: `.meta/command/plugi
 | `pkg` | installed packages: members, versions, connectors | none |
 | `residual <pkg>` | anchor-surface reference scan (the default teardown gate) | none |
 
+The kernel journal (`.meta/kernel-journal.log`, rolling cap of 500 lines, git-tracked) records the mechanical chain — install / warn+ / clear / uninstall / sweep; mechanical facts only, semantic narrative stays in the instance wiki's log.
+
 ## Typical scenarios
 
 - **PLUGIN.yaml changed** (inject / checks / usage / fields / version): `python .meta/scripts/wiki_plugin_kernel.py all` — the daily standard action; one command converges everything; if validate fails it blocks — fix and rerun
