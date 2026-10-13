@@ -34,6 +34,10 @@ python .meta/scripts/wiki_plugin_kernel.py install <pkg> [--without a,b] [--yes]
 
 Kernel commands never prompt — every invocation completes in one shot.
 
+## Transaction close: git snapshot
+
+Every package transaction (install / uninstall / upgrade apply / migrate clear) ends with **one git commit at close** — after validate goes green, mechanical + semantic changes in the same snapshot. The kernel itself never touches git (the journal is its ledger); committing is the agent's closing move. Message format `plugin: <verb> <pkg> [v<version>]` per the instance git contract ([.meta/docs/instance-git.md](../../docs/instance-git.md)). Not a git repo? Skip silently.
+
 ## Command surface
 
 | Command | What it does |

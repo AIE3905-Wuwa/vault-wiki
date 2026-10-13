@@ -13,6 +13,10 @@ rewritten freely — the agent never edits outside the injection region.>
 <vault root>: `vault/` real assets · `wiki/` the md world
 · `.meta/` + `.agents/skills/` the framework body (packages under `.meta/plugins/domains/`).
 
+## Git
+
+Instance snapshots follow `.meta/docs/instance-git.md` — the agent commits at transaction close (`type: summary`); beyond that, git usage is the human's own.
+
 <!-- wiki-inject:start -->
 
 ## wiki 注入区

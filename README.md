@@ -36,7 +36,7 @@ Let an AI coding agent run a "personal wiki" for you:
 | Packages | The index lives in the [registry](https://github.com/AIE3905-Wuwa/registry) (Obsidian-model: self-hosted packages, one-line PR is the listing gate). `kernel install`/`list-remote` resolve against it; unindexed repos stay installable with `--yes` (trust: unknown). The org repos `pkg-cuhksz` / `pkg-lark` / `pkg-email` / `pkg-bili` / `pkg-project` / `pkg-github` hold the packages, split with full file lineage |
 | `.agents/skills/` | Deployment copies of command & connector skills (framework commands after the split; connector skills arrive with their packages) |
 | `test-repo/` | Local test sandbox — untracked since 2026-10-13 (owner re-ruling; a fresh clone carries none of it). A scratch deployment for experiments needing an AGENTS.md context; setup and rules in [`.meta/docs/sandbox.md`](.meta/docs/sandbox.md). The framework repo itself carries no AGENTS.md — library posture; dev rules live in [CONTRIBUTING.md](CONTRIBUTING.md) |
-| `.meta/docs/` | Human docs: `intro.md` introduction, `mechanics.md` mechanics, `usage.md` usage guide, `quickstart.md` deployment walkthrough, `research-*.md` research files — direct links at the end. Authoritative mechanics live in the kernel reference skill; docs do not mirror mechanics |
+| `.meta/docs/` | Human docs: `intro.md` introduction, `mechanics.md` mechanics, `usage.md` usage guide, `quickstart.md` deployment walkthrough, `instance-git.md` the instance-side git minimal contract, `research-*.md` research files — direct links at the end. Authoritative mechanics live in the kernel reference skill; docs do not mirror mechanics |
 
 ## Collaboration
 

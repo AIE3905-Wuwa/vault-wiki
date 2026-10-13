@@ -49,6 +49,10 @@ Expected: core 20 (plus whichever packages you have installed) pass validate, pa
 3. The agent should produce the `wiki/vault/memo.txt.md` proxy page, with SHA-256; the post-write pipeline builds `wiki/index.md`, each directory's `index.md`, `tags.md`, `hot.md`, `log.md`; the attached-audit report follows
 4. Then say "**check**"—all green means the deployment succeeded
 
+## Git snapshots
+
+An instance is real use accumulating — `git init` at the vault root if you haven't (posture A's clone already has history). The agent commits at transaction close (`type: summary`, the same shape as a log entry); you never manage git by hand unless you want to. The minimal contract and the recovery entrance (`git log -- <page>` → `git checkout`) are in [instance-git.md](instance-git.md).
+
 ## One-word daily commands
 
 | You say | The agent does |
