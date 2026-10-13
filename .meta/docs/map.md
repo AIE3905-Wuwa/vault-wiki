@@ -12,7 +12,7 @@
 | Framework mechanics: projections, bridges, injection, inject tiers | [mechanics.md](mechanics.md) |
 | (Un)install history, package lifecycle | [mechanics.md](mechanics.md) §7 + [packages.md](packages.md) |
 | Experiments: sandbox or local | [sandbox.md](sandbox.md) |
-| Development rules, commit flow, template + instance workflow | [CONTRIBUTING.md](../../CONTRIBUTING.md) (repo root) |
+| Development rules, commit flow, template + instance workflow | [CONTRIBUTING.md](../../CONTRIBUTING.md) — template-repo root (an instance reads it there, never keeps a copy) |
 | Day-to-day usage loops | [usage.md](usage.md) |
 | What the framework is, intro | [intro.md](intro.md) |
 | Package-side plugin docs (bb family, lark family, …) | the owning `pkg-*` repo's plugin masters |
