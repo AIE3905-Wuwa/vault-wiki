@@ -910,6 +910,7 @@ def do_residual(pkg_id, pkgs):
 
 INDEX_FILENAME = "INDEX.yaml"
 INDEX_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/registry/master/INDEX.yaml"
+FW_VERSION_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/vault-wiki/master/.meta/VERSION"
 
 
 def load_index(errors, quiet=False):
@@ -1351,7 +1352,7 @@ def _upgrade_action(pkg, args):
 
 
 def do_upgrade(pkg, args=None):
-    """Reconciliation report; `upgrade <pkg> --yes` performs the mechanical reinstall + stages migrations (per #20 逐包不级联)."""
+    """Reconciliation report (packages vs index, framework vs template remote); `upgrade <pkg> --yes` performs the mechanical reinstall + stages migrations (per #20 逐包不级联)."""
     args = args or []
     if pkg and "--yes" in args:
         return _upgrade_action(pkg, args)
@@ -1359,7 +1360,20 @@ def do_upgrade(pkg, args=None):
     index, src = load_index(errors)
     installed = load_packages([])
     fw = framework_version()
-    print(f"framework {'.'.join(map(str, fw)) if fw else '?'} — index: {src}")
+    fw_note = ""
+    try:
+        import urllib.request
+        rfw = urllib.request.urlopen(FW_VERSION_REMOTE, timeout=10).read().decode("utf-8").strip()
+        m = re.fullmatch(r"(\d+)\.(\d+)", rfw)
+        if m:
+            rt = (int(m.group(1)), int(m.group(2)))
+            if fw and rt > fw:
+                fw_note = f" — remote v{rfw} available (manual sync: template diff → selective copy → kernel all, see CONTRIBUTING)"
+            elif fw:
+                fw_note = " — up to date with the template"
+    except Exception:
+        fw_note = " — remote check unavailable"
+    print(f"framework {'.'.join(map(str, fw)) if fw else '?'}{fw_note} — index: {src}")
     rows = 0
     for name, local in sorted(installed.items()):
         lv = str(local.get("version", "?"))
@@ -1368,7 +1382,7 @@ def do_upgrade(pkg, args=None):
             print(f"  {name:<10} local v{lv} — not in the index (instance-local package, channel C)")
         else:
             rv = e.get("version", "?")
-            state = "up to date" if lv == rv else f"v{lv} -> v{rv}: kernel uninstall {name} --yes && kernel install {name}"
+            state = "up to date" if lv == rv else f"v{lv} -> v{rv}: kernel upgrade {name} --yes"
             print(f"  {name:<10} local v{lv}  remote v{rv} — {state}")
         rows += 1
     if pkg and pkg not in installed:

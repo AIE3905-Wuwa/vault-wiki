@@ -75,6 +75,18 @@ The core deployment includes only vault and general wiki capabilities; external 
 ## Upgrade and uninstall
 
 - **Upgrade**: framework — re-copy `.meta/` and `.agents/skills/` over the old ones, rerun `all` (a kernel self-update command is designed but not yet shipped; the copy is manual until then); packages — `kernel upgrade` compares against the registry and applies per package (silent reinstall, never cascaded). A new version may stage **semantic migrations** — the kernel warns on three faces and walks you through; see [packages.md](packages.md). Data zones are unaffected
+- **Automated update check (cron example)**: a declaration page `wiki/cron/update-check.md` is all it takes —
+
+  ```yaml
+  ---
+  type: cron
+  cron:
+    trigger: time "0 9 * * *"
+    action: script
+  ---
+  ```
+
+  with `## Task` noting: run `python3 .meta/scripts/wiki_plugin_kernel.py upgrade` (the check-mode report above, framework-vs-template included); new versions surface as a todo line — never auto-installed. Declaration-as-source: any executor is a replaceable projection of the page; see the cron plugin.
 - **Uninstall**: package-level — `kernel uninstall <pkg> --yes` (four-clear; a declared teardown stages the semantic-deletion warning with a residual gate; data zones stay, lapsing into the deprecated posture); the whole framework — delete the two trees plus the AGENTS.md injection region block. The data zones are yours—dispose of them as you see fit
 
 ## FAQ
