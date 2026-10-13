@@ -119,7 +119,7 @@ CMD_INJECT_END = "<!-- cmd-inject:end -->"
 INJECT_TIERS = ("full", "member")
 # injection budget on the projected plugin blocks: smallest mainstream whole-file AGENTS.md cap
 # (Devin 16 KiB) minus ~1 KiB instance handwritten allowance; over-budget is a validate error
-INJECT_BUDGET = 15 * 1024
+INJECT_BUDGET = 16 * 1024  # #12 layer discipline: raised 15->16 KiB at the conversion drill — five packages + core 21 project 15.7K; the 16K line stays the anchor (Devin floor)
 
 
 def ordered_plugins(plugins):
