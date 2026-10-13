@@ -1378,7 +1378,9 @@ def _stage_migrations(migsrc, pid, prev_version, new_version):
         staged.append(label)
     if staged:
         led = _load_ledger()
-        led[pid] = {"from": str(prev_version or "0"), "to": str(new_version), "items": staged}
+        pkgd = os.path.join(PLUGINS_DIR, "domains", pid)
+        present = [str(m) for m in ((parse_pkg(os.path.join(pkgd, "PKG.yaml")).get("members")) if os.path.exists(os.path.join(pkgd, "PKG.yaml")) else []) if os.path.isdir(os.path.join(pkgd, str(m)))]
+        led[pid] = {"from": str(prev_version or "0"), "to": str(new_version), "items": staged, "members": present}
         _save_ledger(led)
         _banner_set(led)
         _journal("warn+", f"{pid} {prev_version or '0'}->{new_version} items={','.join(staged)}")
@@ -1419,7 +1421,16 @@ def _run_verify(py_path):
     spec = importlib.util.spec_from_file_location("vw_verify", py_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    ctx = types.SimpleNamespace(root=ROOT, pages=list(wikilib.walk_pages(ROOT)))
+    pkg = os.path.basename(os.path.dirname(os.path.abspath(py_path)))
+    pkg_dir = os.path.join(PLUGINS_DIR, "domains", pkg)
+    installed = []
+    if os.path.isdir(pkg_dir):
+        try:
+            pm = parse_pkg(os.path.join(pkg_dir, "PKG.yaml"))
+            installed = [str(m) for m in (pm.get("members") or []) if os.path.isdir(os.path.join(pkg_dir, str(m)))]
+        except ValueError:
+            installed = []
+    ctx = types.SimpleNamespace(root=ROOT, pages=list(wikilib.walk_pages(ROOT)), installed=installed)  # subset matching: verifies address the installed subset, never the full roster
     try:
         return mod.verify(ctx) or [], []
     except Exception as e:
