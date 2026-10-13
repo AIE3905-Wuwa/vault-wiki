@@ -913,20 +913,33 @@ INDEX_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/registry/master/I
 
 
 def load_index(errors, quiet=False):
-    """Resolve the package index: local ROOT/INDEX.yaml first, else the framework repo's raw file."""
+    """Resolve the package index: local ROOT/INDEX.yaml first, then a short-TTL cache, else remote (cached on success; stale cache as fallback)."""
     import urllib.request
+    import time
     raw, src = None, None
     local = os.path.join(ROOT, INDEX_FILENAME)
+    cache = os.path.join(ROOT, ".meta", "registry-cache.yaml")
     if os.path.exists(local):
         raw, src = open(local, encoding="utf-8").read(), local
     else:
-        try:
-            raw = urllib.request.urlopen(INDEX_REMOTE, timeout=15).read().decode("utf-8")
-            src = INDEX_REMOTE
-        except Exception as e:
-            if not quiet:
-                errors.append(f"[error] index unavailable: {e}")
-            return {}, src
+        fetched = False
+        if os.path.exists(cache) and time.time() - os.path.getmtime(cache) < 600:
+            raw, src = open(cache, encoding="utf-8").read(), cache + " (TTL fresh)"
+            fetched = True
+        if not fetched:
+            try:
+                raw = urllib.request.urlopen(INDEX_REMOTE, timeout=15).read().decode("utf-8")
+                src = INDEX_REMOTE
+                try:
+                    open(cache, "w", encoding="utf-8").write(raw)
+                except OSError:
+                    pass
+            except Exception as e:
+                if os.path.exists(cache):  # a stale index beats no index
+                    raw, src = open(cache, encoding="utf-8").read(), cache + " (stale fallback)"
+                elif not quiet:
+                    errors.append(f"[error] index unavailable: {e}")
+                    return {}, src
     index = {}
     for line in raw.splitlines():
         m = re.match(r"^\s{2}([\w-]+):\s*\{(.+)\}\s*$", line)
