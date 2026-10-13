@@ -23,3 +23,22 @@
 2026-10-13T09:04:37 warn+ cuhksz 0->0.1 items=init
 2026-10-13T09:04:37 install cuhksz v0.1 staged=init
 2026-10-13T09:04:37 sweep cuhksz orphaned migration state auto-swept (package absent)
+2026-10-13T09:11:32 install tpk v0.3
+2026-10-13T09:11:33 warn+ tpk teardown staged (x->0)
+2026-10-13T09:11:33 uninstall tpk v0.3
+2026-10-13T09:11:33 clear tpk 0.3->0 verify-clean
+2026-10-13T09:11:33 install tpk v0.3
+2026-10-13T09:11:33 warn+ tpk teardown staged (x->0)
+2026-10-13T09:11:33 uninstall tpk v0.3
+2026-10-13T09:11:33 sweep tpk teardown swept by reinstall
+2026-10-13T09:11:33 install tpk v0.3
+2026-10-13T09:11:33 warn+ tpk teardown staged (x->0)
+2026-10-13T09:11:33 uninstall tpk v0.3
+2026-10-13T09:11:33 clear tpk 0.3->0 verify-clean
+2026-10-13T09:13:07 warn+ cuhksz 0->0.1 items=init
+2026-10-13T09:13:07 install cuhksz v0.1 staged=init
+2026-10-13T09:13:07 sweep cuhksz orphaned package state auto-swept (package absent, residue cleaned)
+2026-10-13T09:13:07 install tpk v0.3
+2026-10-13T09:13:07 warn+ tpk teardown staged (x->0)
+2026-10-13T09:13:07 uninstall tpk v0.3
+2026-10-13T09:13:29 clear tpk 0.3->0 verify-clean

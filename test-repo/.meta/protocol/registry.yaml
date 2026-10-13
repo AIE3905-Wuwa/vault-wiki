@@ -28,41 +28,12 @@ protocol:
     note: "YYYY-MM-DD, refreshed by any write operation"
 
 plugins:
-  bb:
-    bb:
-      note: block mapping (course identity page) — term_id (term machine id, e.g. _426_1) / course_id (course machine id, e.g. _18030_1) / term_status (active|frozen — derived from inbox terms and written to the page, eliminating the single dependency point); one-to-one with the territory directory, i.e. the identity proof
-    terms:
-      note: block mapping (domain-root digest page) — term directory name → one sentence (active/frozen flag + term_id); the active term is the default scope for pulling and digesting
-  bb-map:
-    assessment:
-      note: block mapping (assessments aggregate-page mechanical region) — due (deadline) / submitted_at (submission time) / score and possible (score/full marks) / status (Graded|NeedsGrading|None) / column_id and attempt_id (gradebook column and submission-record ids, reconciliation anchors) — API snapshot fields
-    raw:
-      note: block mapping (assessments aggregate-page multi-source reconciliation) — role → bb/ relative path (requirement/reference/submission, open vocabulary), the correspondence between the aggregate page and the bb/ file group; multiple pages may reference the same file (a shared requirement file is a normal shape)
-    raw_file:
-      note: scalar (attachments 1:1 proxy page) — root-relative path pointing at the bb/ original (word-form and semantics same as mapping)
-    raw_path:
-      note: scalar (courseware knowledge-point page) — root-relative path pointing at a bb/ content unit (file or directory); the path is the birth certificate; may be absent for entirely undownloaded units (the list marking it undownloaded is itself the record)
-    raw_sha256:
-      note: scalar (attachments 1:1 proxy page) — hexadecimal SHA-256, mechanically recomputable from bb/
-  bb-quiz:
-    quiz:
-      note: block mapping (paper page) — course (course code) / scope (question scope) / difficulty_median (difficulty median 1-5, cognitive levels) / types (question-type list, open vocabulary) / source (sample|assignment|habit) / answer_of (answers page backlinking the questions file name)
-  bb-track:
-    form:
-      note: scalar (optional on bb-side note files) — text|image|mixed form
-    origin:
-      note: scalar (optional on bb-side note files) — human|ai authorship; ai is weak evidence, human review promotes its weight
-    stage:
-      note: scalar (optional on bb-side note files) — snapshot|mature|summary stage (ad-hoc snapshot/matured write-up/collected summary); the marking belongs to the human, changes are cognition signals
   calendar:
     calendar:
       note: block mapping (declaration page) — source key → source declaration (value syntax belongs to the adapter: lark-calendar uses `lark/<profile> <calendar_id|primary>`); the source key is the end-of-line tag on schedule lines
   cron:
     cron:
       note: block mapping (task page) — trigger (deferred-trigger declaration; v0.4 generalizes the v0.3 schedule key, schedule reads as the time form): time form = crontab 5-field or human-readable cadence, local timezone by default; condition form = condition <kind> <target> [pattern] [interval] [max_fires] [cooldown], kind first batch file|command|http|process|port|webhook (open vocabulary — extend words, not machinery), pattern semantics fixed as no-match→match edge (default any change after baseline) / action (the action in one sentence) / form (execution shape: session edition | script edition — criterion: any agent-judgment step means session, purely mechanical means script; orthogonal to trigger, all four combinations legal) / domain (owning domain, tagged when a domain plugin registers via the bridge, omittable for cross-domain tasks) / status (active in-service | paused suspended | deprecated retired) / last_run (most recent run or fire time, machine-maintained) / machine (optional: executing-machine anchor for multi-device location; no linkage built)
-  cuhksz:
-    sis:
-      note: block mapping (enrollment identity page identity.md) — student_id / college / school / major / admitted / status (data source: sis-cli transcript; one-to-one with the connector identity, i.e. the domain identity proof)
   device:
     device:
       note: block mapping (device profile page in notes) — serial (serial number) / purchased (purchase date YYYY-MM-DD) / warranty_until (warranty or coverage end date YYYY-MM-DD, the attached-audit scan item), a three-key minimal set; remaining keys open (model, vendor, etc.; the architecture does not enumerate)
@@ -81,15 +52,9 @@ plugins:
       note: root-relative path, always present on proxy pages
     raw_sha256:
       note: hexadecimal SHA-256, mechanically recomputable from vault
-  registry:
-    registry:
-      note: block mapping (index/proxy pages) — source (official page URL) / edition (version anchor: admission-cohort batch + document/Senate number, e.g. AB2025_C037) / raw_file / raw_sha256
   sessions:
     participants:
       note: YAML list, actor convention (human:name / process:flow name / agent/model id), the multi-agent collaboration extension point
-  sis:
-    sis_inbox:
-      note: block mapping (optional on the digest page) — term (active term name) / ttl (TTL override, days); absent → default
   tag:
     tags:
       note: YAML list ≤5; primary language follows the language page's default key (absent → session language); English tags lowercase kebab-case; hierarchy ≤2, `/` separated; restating type forbidden

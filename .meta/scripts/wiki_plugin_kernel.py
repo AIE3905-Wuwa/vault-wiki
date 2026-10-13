@@ -844,15 +844,8 @@ def do_pkg_ls(pkgs, plugins):
     print(f"core (framework): {len(core)}: {', '.join(core)}")
 
 
-def do_residual(pkg_id, pkgs):
-    """D6 residual scan: grep the semantic anchor surfaces for member references after/before uninstall."""
-    if not pkg_id:
-        print(__doc__)
-        return 2
-    pkg = pkgs.get(pkg_id)
-    if pkg is None:
-        print(f"[error] residual: no such package {pkg_id} (see: kernel pkg)")
-        return 1
+def _residual_hits(pkg_id, pkg):
+    """Anchor-surface reference scan -> hit list (the default teardown gate)."""
     tokens = [pkg_id] + [t for t in (pkg.get("members") or []) if t != pkg_id]
     anchors = [AGENTS_MD,
                os.path.join(ROOT, "wiki", "profile.md"),
@@ -862,7 +855,7 @@ def do_residual(pkg_id, pkgs):
     crondir = os.path.join(ROOT, "wiki", "cron")
     if os.path.isdir(crondir):
         anchors += [os.path.join(crondir, f) for f in sorted(os.listdir(crondir)) if f.endswith(".md")]
-    hits = 0
+    hits = []
     for path in anchors:
         if not os.path.exists(path):
             continue
@@ -881,11 +874,25 @@ def do_residual(pkg_id, pkgs):
                 continue  # kernel-managed region — cleaned mechanically on uninstall
             for t in tokens:
                 if re.search(rf"(?<![\w-]){re.escape(t)}(?![\w-])", line):
-                    print(f"[residual] {os.path.relpath(path, ROOT)}:{i}: references {t}: {line.strip()[:120]}")
-                    hits += 1
+                    hits.append(f"{os.path.relpath(path, ROOT)}:{i}: references {t}: {line.strip()[:120]}")
                     break
+    return hits
+
+
+def do_residual(pkg_id, pkgs):
+    """D6 residual scan: grep the semantic anchor surfaces for member references after/before uninstall."""
+    if not pkg_id:
+        print(__doc__)
+        return 2
+    pkg = pkgs.get(pkg_id)
+    if pkg is None:
+        print(f"[error] residual: no such package {pkg_id} (see: kernel pkg)")
+        return 1
+    hits = _residual_hits(pkg_id, pkg)
+    for h in hits:
+        print(f"[residual] {h}")
     if hits:
-        print(f"[residual] {hits} reference(s) on semantic anchor surfaces (handwritten AGENTS region / profile / language / calendar / todo / cron) — semantic cleanup before/after uninstall, per PKG uninstall.bridges")
+        print(f"[residual] {len(hits)} reference(s) on semantic anchor surfaces (handwritten AGENTS region / profile / language / calendar / todo / cron) — semantic cleanup before/after uninstall, per PKG uninstall.bridges")
     else:
         print("[residual] clean — no member references on semantic anchor surfaces")
     return 0
@@ -1106,7 +1113,24 @@ def do_install(spec, args, prev_version=None):
                 continue
             shutil.copytree(os.path.join(msrc, d), dd, ignore=shutil.ignore_patterns("__pycache__"))
             copied_cmd.append(d)
+    led0 = _load_ledger()
+    if pid in led0 and led0[pid].get("kind") == "teardown":
+        del led0[pid]  # reinstall: the teardown premise vanished with the package's return
+        _save_ledger(led0)
+        _banner_set(led0)
+        _journal("sweep", f"{pid} teardown swept by reinstall")
+        print(f"[sweep] {pid}: pending teardown swept (reinstall — premise vanished)")
     staged = _stage_migrations(os.path.join(src, "migrations"), pid, prev_version, pkgm.get("version"))
+    os.makedirs(os.path.join(MIGRATIONS_DIR, pid), exist_ok=True)
+    try:
+        shutil.copyfile(os.path.join(src, "PKG.yaml"), os.path.join(MIGRATIONS_DIR, pid, "PKG.yaml"))  # dormant roster copy — residue-reference for self-healing
+    except OSError:
+        pass
+    tsrc = os.path.join(src, "migrations")
+    if os.path.isdir(tsrc):  # dormant teardown declaration rides along silently until an uninstall consumes it
+        for f in ("teardown.md", "teardown.py"):
+            if os.path.exists(os.path.join(tsrc, f)):
+                shutil.copyfile(os.path.join(tsrc, f), os.path.join(MIGRATIONS_DIR, pid, f))
     if not path:
         shutil.rmtree(src, ignore_errors=True)
     print(f"[install] {pid}: masters -> .meta/plugins/domains/{pid}/"
@@ -1163,10 +1187,23 @@ def do_uninstall(pkg, args):
         sk = os.path.join(SKILLS_DIR, name)
         if os.path.isdir(sk) and not os.path.exists(os.path.join(COMMANDS_DIR, name)):
             shutil.rmtree(sk)
+    # teardown (x->0): dormant declaration staged before removal — semantic cleanup debt gets its warning
+    tmd = os.path.join(MIGRATIONS_DIR, pkg, "teardown.md")
+    if os.path.exists(tmd):
+        led = _load_ledger()
+        led[pkg] = {"kind": "teardown", "from": str(pkgm.get("version", "?")), "to": "0", "items": ["teardown"]}
+        _save_ledger(led)
+        _banner_set(led)
+        try:
+            shutil.copyfile(os.path.join(pkg_dir, "PKG.yaml"), os.path.join(MIGRATIONS_DIR, pkg, "PKG.yaml"))
+        except OSError:
+            pass
+        _journal("warn+", f"{pkg} teardown staged (x->0)")
+        print(f"[pending] {pkg}: teardown staged (x->0) — semantic deletion commands outstanding; kernel migrate {pkg}")
     shutil.rmtree(pkg_dir)
-    # migration state sweeps with the package: obligations vanish when the code side is gone (data stays per retains)
+    # migrate-kind state sweeps with the package; teardown-kind survives (it is ABOUT the absence)
     led = _load_ledger()
-    if pkg in led:
+    if pkg in led and led[pkg].get("kind", "migrate") == "migrate":
         del led[pkg]
         _save_ledger(led)
         _banner_set(led)
@@ -1490,6 +1527,13 @@ def do_migrate(pkg, args):
                         print(f"[migrate] verify: {len(issues)} issue(s): " + " | ".join(str(i)[:100] for i in issues[:5]))
                     else:
                         print("[migrate] verify: clean — ready to clear (--clear)")
+                elif ent.get("kind") == "teardown":
+                    pk = os.path.join(pdir, "PKG.yaml")  # default gate: show what the residual scan still sees
+                    pkgm2 = parse_pkg(pk) if os.path.exists(pk) else {"members": [pkg]}
+                    for h in _residual_hits(pkg, pkgm2)[:8]:
+                        print(f"[migrate] residual: {h}")
+                    if not _residual_hits(pkg, pkgm2):
+                        print("[migrate] residual gate: clean — ready to clear (--clear)")
         return 0
     # --clear: verify-gated (explicit assertion only via --force when no script)
     cleared_all = True
@@ -1506,10 +1550,27 @@ def do_migrate(pkg, args):
             return 1
         if issues:
             print(f"[warning] {f}: warnings (non-blocking): " + " | ".join(str(i)[:100] for i in issues[:5]))
-    if not any(f.endswith(".py") for f in os.listdir(pdir)) and "--force" not in args:
-        print(f"[error] no verify script staged for {pkg} — clear needs --force (explicit assertion) or author-provided verify")
-        return 1
-    shutil.rmtree(pdir, ignore_errors=True)
+    has_py = any(f.endswith(".py") for f in os.listdir(pdir)) if os.path.isdir(pdir) else False
+    if not has_py:
+        if ent.get("kind") == "teardown":
+            pk = os.path.join(pdir, "PKG.yaml")
+            pkgm2 = parse_pkg(pk) if os.path.exists(pk) else {"members": [pkg]}
+            hits = _residual_hits(pkg, pkgm2)
+            if hits:
+                print(f"[error] teardown incomplete — residual references on anchor surfaces: {hits[:5]}")
+                return 1
+        elif "--force" not in args:
+            print(f"[error] no verify script staged for {pkg} — clear needs --force (explicit assertion) or author-provided verify")
+            return 1
+    if ent.get("kind") == "teardown":
+        shutil.rmtree(pdir, ignore_errors=True)
+    else:
+        for item in ent.get("items", []):  # delete the pending items only — dormant teardown files survive for a future uninstall
+            for ext in (".md", ".py"):
+                try:
+                    os.remove(os.path.join(pdir, item + ext))
+                except OSError:
+                    pass
     del led[pkg]
     _save_ledger(led)
     _banner_set(led)
@@ -1630,11 +1691,41 @@ def main():
     if cmd == "upgrade":
         return do_upgrade(sys.argv[2] if len(sys.argv) > 2 else None, sys.argv[3:])
     _led = _load_ledger()
-    _orphans = [k for k, v in _led.items() if not os.path.exists(os.path.join(PLUGINS_DIR, "domains", k))]
-    for k in _orphans:  # self-healing: a ledger entry whose package is gone cannot survive
-        del _led[k]
-        shutil.rmtree(os.path.join(MIGRATIONS_DIR, k), ignore_errors=True)
-        _journal("sweep", f"{k} orphaned migration state auto-swept (package absent)")
+    _orphans = []
+    if os.path.isdir(MIGRATIONS_DIR):
+        for d in sorted(os.listdir(MIGRATIONS_DIR)):
+            if d == "pending.json" or not os.path.isdir(os.path.join(MIGRATIONS_DIR, d)):
+                continue
+            if not os.path.exists(os.path.join(PLUGINS_DIR, "domains", d)) and _led.get(d, {}).get("kind") != "teardown":
+                _orphans.append(d)  # staged dormant PKG marks presence; absent package + no teardown = orphan residue
+    for k in _orphans:  # self-healing: migrate-kind entries die with the package; residue gets mechanically swept too
+        _led.pop(k, None)
+        _pkg_dir = os.path.join(MIGRATIONS_DIR, k)
+        try:
+            _pm = parse_pkg(os.path.join(_pkg_dir, "PKG.yaml")) if os.path.isdir(_pkg_dir) else None
+        except ValueError:
+            _pm = None
+        if _pm:
+            import wikilib as _wl
+            _members = set(str(m) for m in (_pm.get("members") or []))
+            if os.path.isdir(COMMANDS_DIR):
+                for d in sorted(os.listdir(COMMANDS_DIR)):
+                    _fm = os.path.join(COMMANDS_DIR, d, "SKILL.md")
+                    if os.path.exists(_fm):
+                        _own = _owner_list(_wl.parse_frontmatter(open(_fm, encoding="utf-8").read()).get("owner"))
+                        if _own and _own[0] in _members:
+                            shutil.rmtree(os.path.join(COMMANDS_DIR, d))
+                            _sk = os.path.join(SKILLS_DIR, d)
+                            os.path.isdir(_sk) and shutil.rmtree(_sk)
+            for c in _pm.get("connectors") or []:
+                _cd = os.path.join(CONNECTORS_DIR, str(c.get("name")))
+                if os.path.isdir(_cd):
+                    shutil.rmtree(_cd)
+                _sk = os.path.join(SKILLS_DIR, str(c.get("name")))
+                if os.path.isdir(_sk):
+                    shutil.rmtree(_sk)
+        shutil.rmtree(_pkg_dir, ignore_errors=True)
+        _journal("sweep", f"{k} orphaned package state auto-swept (package absent, residue cleaned)")
     if _orphans:
         _save_ledger(_led)
         _banner_set(_led)
