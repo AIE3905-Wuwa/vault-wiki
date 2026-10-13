@@ -16,3 +16,10 @@
 2026-10-13T08:59:12 install cuhksz v0.1 subset(-bb-quiz,bb-teach) staged=init
 2026-10-13T08:59:32 clear cuhksz 0->0.1 verify-clean
 2026-10-13T08:59:32 uninstall cuhksz v0.1
+2026-10-13T09:04:36 warn+ cuhksz 0->0.1 items=init
+2026-10-13T09:04:36 install cuhksz v0.1 staged=init
+2026-10-13T09:04:36 sweep cuhksz migration state cleared by uninstall
+2026-10-13T09:04:36 uninstall cuhksz v0.1
+2026-10-13T09:04:37 warn+ cuhksz 0->0.1 items=init
+2026-10-13T09:04:37 install cuhksz v0.1 staged=init
+2026-10-13T09:04:37 sweep cuhksz orphaned migration state auto-swept (package absent)

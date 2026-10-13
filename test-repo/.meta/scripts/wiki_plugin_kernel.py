@@ -1164,6 +1164,15 @@ def do_uninstall(pkg, args):
         if os.path.isdir(sk) and not os.path.exists(os.path.join(COMMANDS_DIR, name)):
             shutil.rmtree(sk)
     shutil.rmtree(pkg_dir)
+    # migration state sweeps with the package: obligations vanish when the code side is gone (data stays per retains)
+    led = _load_ledger()
+    if pkg in led:
+        del led[pkg]
+        _save_ledger(led)
+        _banner_set(led)
+        shutil.rmtree(os.path.join(MIGRATIONS_DIR, pkg), ignore_errors=True)
+        _journal("sweep", f"{pkg} migration state cleared by uninstall")
+        print(f"[uninstall] {pkg}: pending migration state swept (ledger/staging/banner)")
     print(f"[uninstall] {pkg}: masters removed"
           + (f"; commands: {', '.join(removed_cmd)}" if removed_cmd else "")
           + (f"; connectors: {', '.join(removed_conn)}" if removed_conn else ""))
@@ -1621,6 +1630,15 @@ def main():
     if cmd == "upgrade":
         return do_upgrade(sys.argv[2] if len(sys.argv) > 2 else None, sys.argv[3:])
     _led = _load_ledger()
+    _orphans = [k for k, v in _led.items() if not os.path.exists(os.path.join(PLUGINS_DIR, "domains", k))]
+    for k in _orphans:  # self-healing: a ledger entry whose package is gone cannot survive
+        del _led[k]
+        shutil.rmtree(os.path.join(MIGRATIONS_DIR, k), ignore_errors=True)
+        _journal("sweep", f"{k} orphaned migration state auto-swept (package absent)")
+    if _orphans:
+        _save_ledger(_led)
+        _banner_set(_led)
+        print(f"[sweep] orphaned migration state removed: {', '.join(_orphans)} (package no longer installed)")
     if _led and cmd:
         _ps = "; ".join(f"{k} {v.get('from', '?')}->{v.get('to', '?')}" for k, v in sorted(_led.items()))
         print(f"[pending] SEMANTIC MIGRATIONS OUTSTANDING: {_ps} — kernel migrate <pkg>; validate stays red until cleared")
