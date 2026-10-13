@@ -79,3 +79,12 @@ def check(ctx):
                 if leaked:
                     issues.append({"level": "warning", "message": f"instance-git: projects/{name}/ keeps its own git yet {len(leaked)} entr{'y' if len(leaked) == 1 else 'ies'} tracked by the parent (red line 3 — disclose, never host)"})
     return issues
+
+
+if __name__ == "__main__":
+    import types as _t
+    _r = check(_t.SimpleNamespace(root=os.getcwd(), pages=[]))
+    if not _r:
+        print("instance-git attached audit: all clean")
+    for _i in _r:
+        print(_i["level"] + ": " + _i["message"])
