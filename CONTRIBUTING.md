@@ -23,6 +23,10 @@ Development happens in the **template** (this repository); real use happens in a
 
 - The template stays a library: no instance data, no AGENTS.md, no run log (the opening rule). Mechanical verification that needs an AGENTS.md context runs in a **local sandbox** — a scratch deployment of the template (see [`.meta/docs/sandbox.md`](.meta/docs/sandbox.md)); the in-repo `test-repo/` sandbox is local-only and untracked since 2026-10-13
 - Instance-side upstream updates: fetch/pull the template → diff `.meta/` and `.agents/` → sync selectively (an instance may carry packages and local state the template does not know) — the diff must always include `.meta/docs/` (agent-facing docs are instance runtime dependencies, not optional reading) → at the instance root `kernel all` → `validate` green. Never blind-copy over an instance that has pending migrations
+- Instances do not author framework code (`.meta/`, `.agents/skills/`, `connectors/`) — development happens here and in the `pkg-*` repos; instances pull and sync. Exactly two instance-side touches are legitimate:
+  - **Verification** — a defect that only manifests in an instance environment (its sandbox, its data shape, its connectors' live auth) is reproduced and its fix verified there: the instance is the test bench, never the author
+  - **Reconciled hotfix** — when merge latency blocks real use: minimal patch, byte-identical with the upstream proposal where possible, an upstream PR/issue opened in the same transaction; after merge the upstream final version wins, so a byte-identical hotfix converges to a no-op diff at the next sync
+- Development keeps the dev docs exposed: whoever touches framework code — even instance-side, even a hotfix — reads this document first; the [docs map](.meta/docs/map.md) routes here, instance sync diffs always carry `.meta/docs/`, and package-repo PRs self-check against this file
 - Instances report framework bugs back as template issues — an instance's own wiki never becomes the framework's change trail
 
 ## Data red lines — never in git
