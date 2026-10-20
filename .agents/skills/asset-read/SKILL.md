@@ -18,7 +18,7 @@ Write: `wiki/tmp/` extraction cache (the only landing spot)
 1. Locate the asset path and extension; md / txt / csv are read directly and done — no cache is written
 2. Check the cache: if `wiki/tmp/<asset name>.txt` is present and not past stale_after → read the cache directly, do not re-extract
 3. On a miss, extract:
-   - pdf: PyMuPDF (`import fitz`; if missing, first `pip install pymupdf`); for large files, extract by page range or keyword location — never feed the whole book into context
+   - pdf: PyMuPDF (`import fitz`; if missing, install it per the host's Python package manager — e.g. pip on dev desktops, uv on PEP 668 hosts; instance-level environment declarations in AGENTS.md take precedence); for large files, extract by page range or keyword location — never feed the whole book into context
    - docx / xlsx: pure standard-library zipfile + xml text-node extraction
    - other binaries: no deep read; report honestly "text extraction not supported"
 4. Write the output to `wiki/tmp/<asset name>.txt`, with a three-line comment header: source path / extraction date / stale_after = extraction date + 7 days
