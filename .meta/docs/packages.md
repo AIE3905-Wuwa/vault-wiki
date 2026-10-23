@@ -82,7 +82,7 @@ uninstall:              # declaration, never executable hooks
 | `validate --scope <pkg>` | single-package tolerant mode (D3): deps absent outside the package degrade to warnings — the CI shape for package repos post-split, run with a framework checkout alongside |
 | `pkg` | package inventory: members, connectors, implicit core remainder |
 | `residual <pkg>` | D6 residual scan: greps handwritten AGENTS region + profile/language/calendar/todo/cron anchors for member references (the kernel-managed injection region is skipped — it is cleaned mechanically) |
-| `install <pkg>[@tag]` | resolve the [registry](https://github.com/AIE3905-Wuwa/registry) index (members reconciled against PKG.yaml) → trust gate → clone → copy masters/connectors/commands → converge. `install <owner/repo> --yes` installs an unindexed repository (trust: unknown); `--path <dir>` installs a local one (channel C) |
+| `install <pkg>[@tag]` | resolve the [registry](https://github.com/AIE3905-Wuwa/registry) index (members reconciled against PKG.yaml) → trust gate → clone → prospective manifest/budget preflight → copy masters/connectors/commands → converge. `install <owner/repo> --yes` installs an unindexed repository (trust: unknown); `--path <dir>` installs a local one (channel C) |
 | `uninstall <pkg> --yes` | D6 four-clear (masters/commands/connectors/skills) + convergence + residual scan + retains/credentials reminders — data never touched |
 | `list-remote` | index table with installed marks |
 | `plan <pkg>` | dependency disclosure before a package lands |
@@ -90,6 +90,16 @@ uninstall:              # declaration, never executable hooks
 | `upgrade` | reconciliation report (local vs index); applying runs a **silent reinstall** per package (never cascaded) — member deltas, changelog excerpts, chained migration staging |
 
 *Why scope mode exists before the split:* after the split the framework repo and each package repo no longer contain the full graph — validate would be blind exactly where it matters most. Absence-tolerance turns "plugin missing" from an error into a listed warning, keeping every repo self-checkable.
+
+### Install failure handling
+
+Before copying into the instance, `install` stages the prospective masters in a temporary directory using the actual install filter (including `--without` and its dependent-member pruning). It combines them with installed manifests and checks manifest/dependency rules and the existing UTF-8 injection budget. A rejection returns exit 1 before changing package masters, commands, connectors, migration state, journal or projections. Registry lookup may still refresh its local index cache; downloaded temporary sources are discarded on preflight rejection, while a caller's `--path` source is retained.
+
+After copying, full binding/bridge/package validation and projection/deployment still run. Failure returns exit 1 with an incomplete-state warning; later projection steps stop when a preceding step returns failure. This is **not transactional rollback**: errors discovered after preflight, filesystem failures, or concurrent changes can leave files behind. Inspect the reported errors and run `kernel validate` before recovery; a successful diagnostic does not itself repair missing projection markers. Pending semantic init migrations retain the existing behavior: mechanical install can return 0 while explicitly reporting pending work, and `validate` stays red until the migration is completed and cleared.
+
+The 16 KiB limit and its calculation are unchanged (#48/#49). This does not make `upgrade` transactional: its existing uninstall/reinstall sequence can remove the old package before the install preflight runs. Uninstall's own return-code contract is unchanged.
+
+Offline regression suite: `python -m unittest discover -s .meta/tests -p test_install_preflight.py -v` (synthetic packages; no network or credentials).
 
 ## Uninstall contract (D6)
 
