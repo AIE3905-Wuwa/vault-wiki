@@ -220,10 +220,10 @@ def _plugin_dirs(base):
                     yield sub2, s2dir
 
 
-def load_plugins():
+def load_plugins(base=None):
     """Read all plugin manifests (flat / core/ / domains/<pkg>/ layouts); returns (plugins, errors)."""
     plugins, errors = {}, []
-    for name, pdir in _plugin_dirs(PLUGINS_DIR):
+    for name, pdir in _plugin_dirs(PLUGINS_DIR if base is None else base):
         yml = os.path.join(pdir, "PLUGIN.yaml")
         md = os.path.join(pdir, "PLUGIN.md")
         if not os.path.exists(md):
@@ -990,11 +990,48 @@ def converge(label):
         print(f"[{label}] validation failed ({len(errors)} errors) — fix before continuing")
         return False
     print(f"[{label}] validate: {len(plugins)} plugins green")
-    do_inject(plugins)
-    do_check_inject(plugins)
-    do_cmd_inject(plugins)
-    do_registry(plugins)
-    do_deploy()
+    for project in (do_inject, do_check_inject, do_cmd_inject, do_registry):
+        if not project(plugins):
+            print(f"[{label}] projection failed ({project.__name__}) — state may be partial")
+            return False
+    if not do_deploy():
+        print(f"[{label}] deployment failed — state may be partial")
+        return False
+    return True
+
+
+def _preflight_install(src, ignore):
+    """Validate the prospective manifest graph before writing installed package state.
+
+    Stage only masters using the same copy filter as install, including --without.
+    Binding/bridge/package checks still run after commands and connectors land.
+    This is a preflight, not a transaction or a replacement for convergence.
+    """
+    import tempfile
+
+    plugins, errors = load_plugins()
+    warns = []
+    try:
+        with tempfile.TemporaryDirectory(prefix="vw-preflight-") as stage:
+            shutil.copytree(src, os.path.join(stage, "package"), ignore=ignore)
+            incoming, load_errors = load_plugins(stage)
+            errors.extend(load_errors)
+            for name, manifest in incoming.items():
+                if name in plugins:
+                    errors.append(f"[error] {name}/: duplicate plugin id (already installed)")
+                else:
+                    plugins[name] = manifest
+            if not errors:
+                validate(plugins, errors, warnings=warns)
+    except (OSError, ValueError) as e:
+        errors.append(f"[error] install preflight: {e}")
+    for w in warns:
+        print(f"[warning] {w}")
+    for e in errors:
+        print(e)
+    if errors:
+        print("[install] preflight failed — package files and projections were not changed")
+        return False
     return True
 
 
@@ -1110,9 +1147,14 @@ def do_install(spec, args, prev_version=None):
     if os.path.exists(dst):
         print(f"[error] {pid} already installed — uninstall first (kernel uninstall {pid} --yes)")
         return 1
+    ignore = shutil.ignore_patterns(".git", ".meta", "connectors", "command", "README.md",
+                                   "__pycache__", "migrations", *sorted(pruned))
+    if not _preflight_install(src, ignore):
+        if not path:
+            shutil.rmtree(src, ignore_errors=True)
+        return 1
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", ".meta", "connectors", "command", "README.md", "__pycache__", "migrations",
-                                                            *sorted(pruned)))
+    shutil.copytree(src, dst, ignore=ignore)
     copied_conn, copied_cmd = [], []
     csrc = os.path.join(src, "connectors")
     if os.path.isdir(csrc):
@@ -1163,9 +1205,12 @@ def do_install(spec, args, prev_version=None):
           + (f"; connectors: {', '.join(copied_conn)}" if copied_conn else "")
           + (f"; commands: {', '.join(copied_cmd)}" if copied_cmd else ""))
     _journal("install", f"{pid} v{pkgm.get('version')}" + (f" subset(-{','.join(sorted(pruned))})" if pruned else "") + (f" staged={','.join(staged)}" if staged else ""))
-    converge("install")
+    converged = converge("install")
     if staged:
         print(f"[pending] semantic migration staged for {pid}: {', '.join(staged)} — kernel migrate {pid}; validate stays red until cleared")
+    if not converged:
+        print("[error] install incomplete — files may remain; run kernel validate before retrying")
+        return 1
     return 0
 
 
