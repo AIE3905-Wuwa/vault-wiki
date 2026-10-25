@@ -19,8 +19,12 @@ const root = path.resolve(__dirname, "..");
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const problems = [];
 
-if (pkg.name !== "owfa") problems.push(`package name is ${pkg.name}, not owfa — the brand and the command must agree`);
+// Target name owfa, fallback owfadev; both keep the owfa command.
+if (!["owfa", "owfadev"].includes(pkg.name)) problems.push(`package name ${pkg.name} is neither the target (owfa) nor the fallback (owfadev)`);
 if (!pkg.bin || pkg.bin.owfa !== "bin/owfa.js") problems.push("bin.owfa must point at bin/owfa.js");
+if (!pkg.bin || pkg.bin[pkg.name] !== "bin/owfa.js") {
+  problems.push(`bin.${pkg.name} is missing — npx ${pkg.name} must resolve to the CLI (declare both bins on the fallback package)`);
+}
 for (const hook of ["preinstall", "install", "postinstall"]) {
   if (pkg.scripts && pkg.scripts[hook]) problems.push(`${hook} script present — consumers must install without executing package code`);
 }
