@@ -66,7 +66,7 @@ A name that exists only in slides is a slogan; a name that resolves in a package
 - **GitHub `owfa` is taken** by an unrelated, dormant organization ("One Web For All", 0 public repos). We do not claim it, link it, or wait for it.
 - **GitHub `owfadev` is available** (checked 2026-10-25). It is the project's org target. The repository target is `owfadev/owfa`; the current `AIE3905-Wuwa/vault-wiki` stays in place until the org exists and the team agrees to the move. A move is a migration (redirects, registry rows, secrets, permissions), not a rename.
 - **npm `owfa` is frozen.** `npm view owfa` returns 404, but 404 means "no published package", **not** "publishable": npm holds the name back under its similarity policy (too close to `ow` / `ora`; reported by the maintainer when publishing). The only path is an application to npm support.
-- **The fallback is `owfadev`** — free on npm (checked 2026-10-25), matching the GitHub org. The package can expose both bins (`owfa` and `owfadev`), so `npx owfadev init` works today and `owfa init` works after a global install. If the application is granted, `owfa` becomes the primary package; `owfadev` stays as an alias or is deprecated, never deleted.
+- **The fallback is `owfadev`** — it returns 404 on npm (no published package, no freeze reported; unlike `owfa`, confirm at the first publish), matching the GitHub org. The package can expose both bins (`owfa` and `owfadev`), so `npx owfadev init` works today and `owfa init` works after a global install. If the application is granted, `owfa` becomes the primary package; `owfadev` stays as an alias or is deprecated, never deleted.
 
 A 404 is not a claim. A frozen name is claimed by an application **plus** a working fallback, not by announcing the command early.
 
