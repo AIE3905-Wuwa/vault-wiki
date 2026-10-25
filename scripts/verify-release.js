@@ -19,6 +19,12 @@ const root = path.resolve(__dirname, "..");
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const problems = [];
 
+if (pkg.name !== "owfa") problems.push(`package name is ${pkg.name}, not owfa — the brand and the command must agree`);
+if (!pkg.bin || pkg.bin.owfa !== "bin/owfa.js") problems.push("bin.owfa must point at bin/owfa.js");
+for (const hook of ["preinstall", "install", "postinstall"]) {
+  if (pkg.scripts && pkg.scripts[hook]) problems.push(`${hook} script present — consumers must install without executing package code`);
+}
+
 const fw = (() => {
   try {
     return fs.readFileSync(path.join(root, ".meta", "VERSION"), "utf8").trim();
