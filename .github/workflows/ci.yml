@@ -1,0 +1,28 @@
+name: channel checks
+
+# The npm channel is tested where it will break: packlist invariants, the CLI's
+# init/upgrade loop on a real temp workspace, and the kernel's structural check.
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  channel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Release gate (packlist, version anchor, no local state)
+        run: node scripts/verify-release.js
+
+      - name: Channel smoke (init / existing AGENTS.md / upgrade / --force / --check)
+        run: node test/smoke.js
+
+      - name: Kernel structural validation
+        run: python3 .meta/scripts/wiki_plugin_kernel.py validate
