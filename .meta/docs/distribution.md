@@ -6,7 +6,7 @@
 
 The framework is pure-stdlib Python with no runtime dependencies. npm is not a runtime choice here; it is a **delivery vehicle** chosen because it already exists on the machines that run agents:
 
-- one command, no clone: `npx owfa init my-workspace`
+- one command, no clone: `npx owfa init my-workspace` (target) / `npx owfadev init` (fallback while the npm name is under application)
 - a versioned, immutable, checksummed artifact (the npm tarball) instead of a moving branch
 - Windows does not need Python's script directory on `PATH` (the failure that motivated #46)
 - `npx` keeps a cache, so re-running is cheap; upgrades fetch a new tarball by version
@@ -14,7 +14,7 @@ The framework is pure-stdlib Python with no runtime dependencies. npm is not a r
 
 Python remains the only runtime dependency of the framework. Node is needed to *install*, not to *use*.
 
-The name is part of the channel: **OWFA — One Workspace For All (agents)**. The package is `owfa`, the command is `owfa`, and the repository keeps its technical name `vault-wiki`. See [naming.md](naming.md) for the rationale and the collision policy.
+The name is part of the channel: **OWFA — One Workspace For All (agents)**, with **OWFA Core** as the framework body and **OWFA CLI** as this installer. The target package is `owfa`; the name is **frozen** under npm's similarity policy (too close to `ow` / `ora`), so publication waits on an application and the fallback package is `owfadev` (same code, bins `owfa` + `owfadev`). The GitHub home target is `owfadev/owfa`. See [naming.md](naming.md) for the layers and the collision policy.
 
 ## What ships
 
@@ -75,8 +75,10 @@ Install identification is therefore trivial: `.meta/VERSION` says which framewor
 
 One-time:
 
-1. Create the npm account that will own `owfa` (the unscoped name is what makes the command `npx owfa`; the name was free on 2026-10-25).
-2. Add `NPM_TOKEN` as a repository secret (automation token with publish rights), or run `npm login` locally for a manual first release.
+1. Settle the public home: create the `owfadev` GitHub org and move the repo to `owfadev/owfa` (a transfer, not a copy; GitHub redirects the old URL). Update `package.json` `repository`/`homepage` and the README links in the same commit.
+2. Apply to npm support for `owfa` (frozen on similarity grounds), with the org/repo, the docs and this channel as evidence. A 404 is not availability.
+3. Create the npm account/org that will publish; if the application is not granted, publish the fallback `owfadev` (bins `owfa` + `owfadev`) and keep `owfa` as the brand.
+4. Add `NPM_TOKEN` as a repository secret (automation token with publish rights), or run `npm login` locally for a manual first release.
 
 Every release:
 
@@ -122,4 +124,5 @@ npm pack --dry-run
 | `already contains .meta/` | the directory is already an instance — use `owfa upgrade`; `--force` re-copies the trees |
 | `npx` runs an old version | `npx owfa@latest …`; npm caches by version range |
 | upgrade blocked by pending migrations | run `python .meta/scripts/wiki_plugin_kernel.py migrate <pkg>` and follow the printed page before upgrading again |
+| publish fails: name too similar | npm froze `owfa` (similar to `ow`/`ora`); use the `owfadev` fallback or wait for the application; do not retry the same name |
 | Windows: `python` opens the Store | install Python 3 and ensure `py -3` or `python3` works; `OWFA_PYTHON` overrides detection |
