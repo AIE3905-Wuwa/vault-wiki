@@ -55,6 +55,7 @@ const REQUIRED = [
   "LICENSE",
   ".meta/VERSION",
   ".meta/scripts/wiki_plugin_kernel.py",
+  ".meta/docs/deployment.md",
   ".meta/docs/quickstart.md",
   ".agents/skills/map/SKILL.md",
   "bin/owfa.js",

@@ -75,6 +75,13 @@ try {
     assert.ok(/doctor: ok/.test(r.stdout), r.stdout);
   });
 
+  step("owfa pkg lists the core inventory", () => {
+    const r = run(["pkg"], empty);
+    assert.strictEqual(r.status, 0, r.stderr + r.stdout);
+    assert.match(r.stdout, /core \(framework\): \d+/);
+    assert.ok(r.stdout.includes("calendar"), r.stdout);
+  });
+
   step("second init refuses without --force", () => {
     const r = run(["init", empty], tmpRoot);
     assert.notStrictEqual(r.status, 0);

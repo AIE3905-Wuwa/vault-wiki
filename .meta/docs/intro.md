@@ -52,5 +52,5 @@ A minimal chronology: 2026-08 the personal vault founded; 09-08 the prototype la
 | Using the sandbox | `.meta/docs/sandbox.md` |
 | Why a plugin is designed this way | that plugin's `PLUGIN.md` |
 | Research basis | `.meta/docs/research-*.md` |
-| Deployment walkthrough | `.meta/docs/quickstart.md` |
+| Deployment guide | `.meta/docs/deployment.md` (five-minute path: `.meta/docs/quickstart.md`) |
 | Run history and current state | `log.md` |

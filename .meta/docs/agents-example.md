@@ -1,6 +1,6 @@
 # AGENTS.md — instance seed example
 
-> The framework repo itself carries no AGENTS.md (library posture — dev rules live in README/CONTRIBUTING). This is the seed an instance drafts at deployment step ③ of the quickstart. Keep it short: one identity paragraph, one layout paragraph, the injection region verbatim.
+> The framework repo itself carries no AGENTS.md (library posture — dev rules live in README/CONTRIBUTING). This is the seed an instance drafts at deployment step ③ of the deployment guide. Keep it short: one identity paragraph, one layout paragraph, the injection region verbatim.
 
 ```markdown
 # <vault name> — personal/instance library

@@ -43,7 +43,7 @@ Let an AI coding agent run a "personal wiki" for you:
 | `.agents/skills/` | Deployment copies of command & connector skills (framework commands after the split; connector skills arrive with their packages) |
 | `bin/` + `templates/` + `package.json` | The npm channel: `owfa` CLI, AGENTS seed, package manifest. `test/` and `scripts/` are development-only and never ship |
 | `test-repo/` | Local test sandbox — untracked since 2026-10-13 (owner re-ruling; a fresh clone carries none of it). A scratch deployment for experiments needing an AGENTS.md context; setup and rules in [`.meta/docs/sandbox.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/sandbox.md). The framework repo itself carries no AGENTS.md — library posture; dev rules live in [CONTRIBUTING.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/CONTRIBUTING.md) |
-| `.meta/docs/` | Human docs: `intro.md` introduction, `mechanics.md` mechanics, `usage.md` usage guide, `quickstart.md` deployment walkthrough, `instance-git.md` the instance-side git minimal contract, `research-*.md` research files — direct links at the end. Authoritative mechanics live in the kernel reference skill; docs do not mirror mechanics |
+| `.meta/docs/` | Human docs: `intro.md` introduction, `mechanics.md` mechanics, `usage.md` usage guide, `deployment.md` full guide / `quickstart.md` five-minute path, `instance-git.md` the instance-side git minimal contract, `research-*.md` research files — direct links at the end. Authoritative mechanics live in the kernel reference skill; docs do not mirror mechanics |
 
 ## Collaboration
 
@@ -51,7 +51,7 @@ This repository is a team project: three members with write access, everything t
 
 ## Getting started
 
-Two ways in. **Channel (recommended):** `npx owfa init my-workspace` — Node 16.7+ for the installer, Python 3 for the framework; nothing to clone. **Manual:** clone this repository and follow the five steps in [quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md), then `python .meta/scripts/wiki_plugin_kernel.py all`.
+Two ways in. **Channel (recommended):** `npx owfa init my-workspace` — Node 16.7+ for the installer, Python 3.9+ for Core; nothing to clone (`npx owfadev init` is the fallback while the npm name is under application). **Manual:** clone this repository and follow the five steps in [quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md), then `python .meta/scripts/wiki_plugin_kernel.py all`. Full guide, including packages and upgrades: [deployment.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/deployment.md).
 
 Prerequisites: Python 3.9+, pure stdlib, no install needed for the framework itself (connectors carry their own deps); Node 16.7+ only for the npm channel; git recommended (instance snapshots); an agent environment that reads AGENTS.md and skills, e.g. ZCode; Obsidian optional, viewer only.
 
@@ -59,27 +59,28 @@ Open an agent session at the repository root. AGENTS.md is the constitution, con
 
 ## Deployment
 
-### npm channel (CLI built; publication pending the name)
-
-The CLI is implemented and tested. Publication waits on the npm `owfa` application (the name is frozen on similarity grounds); if it is denied or slow, the same CLI ships as `owfadev`. Until one of them is served by the registry, the git channel below is the working path.
+OWFA has three layers: **OWFA CLI** (the installer, never copied into the workspace), **OWFA Core** (`.meta/` + `.agents/skills/`, the thing that is installed), and the **kernel** (a pure-stdlib Python script inside Core — there is no separate kernel install; Python 3.9+ runs it). Domain packages under `.meta/plugins/domains/<pkg>/` are optional.
 
 ```bash
-npx owfa init my-workspace        # target; served once the name is granted
-npx owfadev init my-workspace     # fallback; same CLI, same `owfa` command after install
+npx owfa init my-workspace        # target name; npx owfadev init while the application is pending
 cd my-workspace
-npx owfa doctor                   # python / framework / injection markers / kernel validate
+npx owfa doctor                   # target: python / framework / markers / kernel validate (npx owfadev doctor for the fallback)
+npx owfa list                     # registry catalog
+npx owfa add cuhksz               # optional package
 npx owfa upgrade                  # later: replace the framework trees, preserve instance state
-npx owfa add cuhksz               # optional: install a domain package from the registry
 ```
 
-`init` is additive: existing content is untouched, an existing `AGENTS.md` is preserved and only the injection region is appended. `upgrade` replaces `.meta/` and `.agents/skills/` (instance data is never touched) and keeps the kernel's migration ledger, journal and registry cache. Versioning, release runbook and security posture: [`.meta/docs/distribution.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/distribution.md).
+While the name is under application, substitute `npx owfadev` for every `npx owfa` command above (or install either package globally; both expose the `owfa` bin).
 
-### Manual (git channel)
+`init` is additive: existing content is untouched, an existing `AGENTS.md` is preserved and only the injection region is appended. `upgrade` replaces `.meta/` and `.agents/skills/` (instance data is never touched) and keeps the kernel's migration ledger, journal and registry cache.
 
-The framework proper is three things: `.meta/`, `.agents/skills/`, and the AGENTS.md injection region. Deployment is an additive copy: copy the two trees, write the AGENTS shell, create empty directories, converge with the kernel; existing content in the target repo stays untouched. Derived pages self-build on first run — no hand-crafting. Step-by-step walkthrough in [.meta/docs/quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md), rehearsed against a clean directory.
+- Full deployment guide (components, channels, packages, upgrades, troubleshooting): [`.meta/docs/deployment.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/deployment.md)
+- Five-minute path: [`.meta/docs/quickstart.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md)
+- Channel design and release runbook: [`.meta/docs/distribution.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/distribution.md)
 
 ## Doc pointers
 
+- [.meta/docs/deployment.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/deployment.md) — deployment guide: components, channels, first run, packages, upgrades, troubleshooting
 - [.meta/docs/naming.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/naming.md) — the name: canonical expansion, what each word commits to, two names two jobs, objections, collision policy
 - [.meta/docs/distribution.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/distribution.md) — the npm channel: commands, artifacts, version invariant, release runbook, security posture
 - [.meta/docs/packages.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/packages.md) — package mechanism and design rationale: layout, PKG.yaml, invariants, versions, uninstall contract, decision ledger
@@ -88,7 +89,7 @@ The framework proper is three things: `.meta/`, `.agents/skills/`, and the AGENT
 - [.meta/docs/intro.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/intro.md) — introduction: why this framework, narrative & lineage
 - [.meta/docs/mechanics.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/mechanics.md) — mechanics: each mechanism one level deeper, with a bb-family walkthrough; read before touching the framework
 - [.meta/docs/usage.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/usage.md) — usage guide: the three work loops (library keeping, course learning, collaborative development)
-- [.meta/docs/quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md) — quick start: five deployment steps and first-run verification
+- [.meta/docs/quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md) — five-minute path: one command or the manual five steps, then first run
 - `.meta/protocol/` — field registry, action discipline, disclosure paradigm
 
 ## History

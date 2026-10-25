@@ -1,98 +1,54 @@
 # Quickstart
 
-> Reader: anyone who wants to install the framework into their own directory—an Obsidian vault or any folder works—or the agent doing it for you. About ten minutes end to end; every step has been rehearsed and verified against a clean directory. First verified 2026-09-13; updated 2026-10-04 to 28 plugins, 13 commands; 2026-10-06 counts refreshed to 35 plugins; 2026-10-12 package layout — core 20 + 5 domain packages (see [packages.md](packages.md)); 2026-10-13 kernel install/upgrade/migrate replace the copy-loop model for packages.
+> The five-minute path. Full guide — components, channels, packages, upgrades, troubleshooting: [deployment.md](deployment.md). The channel's design and release record: [distribution.md](distribution.md).
+> Status: npm `owfa` is under application (frozen on similarity grounds); until the registry serves it, the git channel works today. The fallback package `owfadev` carries the same CLI once published.
 
-## What you get
+## 1. Prerequisites
 
-- `vault/` holds real assets in any format; `wiki/` carries proxy pages and native notes. Markdown plus plain files as the foundation; Obsidian is just an optional viewer
-- An agent that tends the vault for you: say "map" when placing assets; "save" to store insights; "query" to ask for knowledge; "teach", "quiz", or "cognition profile" for course learning. Index, tags, hot cache, and log are maintained automatically
-- Additive deployment: not one byte of the target vault's existing content is touched
+- **Python 3.9+** — the framework and kernel are pure stdlib; no pip, no venv.
+- **Node 16.7+** — only for the npm channel (the CLI is Node).
+- **An agent** that reads `AGENTS.md` and `.agents/skills/` (ZCode, Claude Code, Cursor, dsh…).
+- **git** recommended — instance snapshots and the upgrade rollback path.
 
-## Prerequisites
+## 2. One command (npm channel)
 
-| Item | Requirement |
-|---|---|
-| Python | 3.9+, pure standard library, zero dependencies |
-| agent | A coding assistant that can read AGENTS.md and `.agents/skills/`, e.g. ZCode |
-| Obsidian | Optional, viewer only |
-
-## Three postures
-
-**0. One command (npm channel).** `npx owfa init <your-vault>` — fetches the framework, creates the directories, writes the AGENTS shell (or appends only the injection region to an existing one), and converges the projections. Then `cd <your-vault> && npx owfa doctor`. This is the same deployment as ①–⑤ below, mechanized; the manual steps remain the reference, the offline path and the developer path. Optional packages: `npx owfa init <dir> --packages cuhksz,lark`; later `npx owfa upgrade` replaces the framework trees and preserves the kernel's migration state. Details: [distribution.md](distribution.md).
-
-The manual steps below serve A and B; posture 0 skips them.
-
-**A. Just using it (clone-as-instance).** A clone of this repository *is* your instance: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git <your-vault>`, optionally `rm -rf <your-vault>/.git && git init` to own the history, then do steps ③–⑤ below (AGENTS.md shell, four directories, converge). Packages install on demand from the registry — `kernel install <pkg> --yes`. No development intent needed; you never touch the framework internals.
-
-**B. Developing (template + instance).** Keep a clone of this repository as the *template* — development, experiments and upstream updates happen there, following [CONTRIBUTING.md](../../CONTRIBUTING.md). Separately deploy a real *instance* (your actual vault — posture A's steps, or the embedding steps below); when the template gains updates, review the diff and sync selectively into the instance, then converge — see the "Template + instance workflow" section of CONTRIBUTING.md. To develop is to run a real instance: the framework is validated in actual use, not in the abstract.
-
-## Five deployment steps
-
-**① Get the framework**: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git`, or download the ZIP and unzip it (the old personal-repo address redirects).
-
-**② Copy two trees** to the target vault root: `.meta/` and `.agents/skills/`. Plugin masters, command masters and copies, protocol artifacts, and mechanical scripts all live there. The clone ships **core 20 only** — no domain packages. Packages are added per need from the registry: `python3 .meta/scripts/wiki_plugin_kernel.py install <pkg> --yes` (see [packages.md](packages.md)); offline alternative — copy a package's `domains/<pkg>/` directory in and rerun `all`.
-
-**③ Write the target vault's AGENTS.md**: draft the shell yourself—one identity paragraph plus a layout description; copy the injection region marker block verbatim from [agents-example.md](agents-example.md), not a single character changed—from `<!-- wiki-inject:start -->` to `<!-- wiki-inject:end -->`—it is the sole source of the structural contract. If the target vault already has an AGENTS.md, paste in only the injection region block.
-
-**④ Create four empty directories**: `vault/`, `wiki/notes/`, `wiki/sessions/`, `wiki/vault/`. Derived pages need no hand-creation—index, tags, hot, and log are built by the pipeline on first run; the root index's `format_version` is also rendered by the pipeline.
-
-**⑤ Converge the projections**, run at the target vault root:
-
-```
-python .meta/scripts/wiki_plugin_kernel.py all
+```bash
+npx owfa init my-workspace          # target name, once granted
+# while the name is pending:
+npx owfadev init my-workspace       # fallback package, same CLI
+cd my-workspace
+npx owfa doctor                     # target: python / framework / markers / kernel validate
+npx owfadev doctor                  # fallback: same check
 ```
 
-Expected: core 20 (plus whichever packages you have installed) pass validate, package rosters reconcile; injection region unchanged; command copies in sync. Any error means the copy is incomplete—fix it and rerun.
+`init` copies `.meta/` + `.agents/skills/`, creates `vault/` and the three wiki directories, writes or appends `AGENTS.md`, and runs the kernel. Existing content is untouched. Optional packages: `npx owfa init my-workspace --packages cuhksz,lark`.
 
-## First-run verification
+Already have a workspace? `init` refuses if `.meta/` exists; use `npx owfa upgrade` (or `--force` to re-copy the framework trees).
 
-1. Put any file into `vault/`, e.g. `memo.txt`
-2. Open an agent session at the target vault root and say "**map**"
-3. The agent should produce the `wiki/vault/memo.txt.md` proxy page, with SHA-256; the post-write pipeline builds `wiki/index.md`, each directory's `index.md`, `tags.md`, `hot.md`, `log.md`; the attached-audit report follows
-4. Then say "**check**"—all green means the deployment succeeded
+## 3. Manual five steps (git or offline)
 
-## Git snapshots
+1. **Get the framework**: `git clone https://github.com/owfadev/vault-wiki.git my-workspace` — a clone is a valid instance. (Before the org rename, clone `https://github.com/AIE3905-Wuwa/vault-wiki.git`; the old URL redirects afterwards.) To embed into an existing vault, clone the template elsewhere and copy `.meta/` + `.agents/skills/` into the target root.
+2. **Write `AGENTS.md`**: one identity paragraph, one layout paragraph, and the injection markers verbatim from [agents-example.md](agents-example.md). Existing `AGENTS.md`? Paste in only the marker block.
+3. **Create four directories**: `vault/`, `wiki/notes/`, `wiki/sessions/`, `wiki/vault/`.
+4. **Converge**:
+   ```bash
+   python .meta/scripts/wiki_plugin_kernel.py all
+   ```
+5. **Verify**: drop a file into `vault/`, open an agent at the root, say "map", then "check".
 
-An instance is real use accumulating — `git init` at the vault root if you haven't (posture A's clone already has history). The agent commits at transaction close (`type: summary`, the same shape as a log entry); you never manage git by hand unless you want to. The minimal contract, the mechanical red-line audit, and the recovery entrance (`git log -- <page>` → `git checkout`) live in the [instance-git plugin](../plugins/core/instance-git/PLUGIN.md) (a core plugin — it rides with the framework).
+There is no separate kernel install: the kernel is `.meta/scripts/wiki_plugin_kernel.py` inside the tree; Python 3.9+ runs it. On Windows use `py -3` or set `OWFA_PYTHON`.
 
-## One-word daily commands
+## 4. Next
 
-| You say | The agent does |
-|---|---|
-| map | register vault assets as proxy pages |
-| save | distill conversation insights into native notes |
-| query | answer synthetically from hot cache, index, and grep, with wikilink citations |
-| check | vault health audit |
-| plugin | (un)install structural plugins |
-| profile | maintain a continuous cognition profile of you |
-| cognition profile / teach & answer / quiz self-test | the bb domain course-learning family; connect the course domain first, see below |
-| kernel reference | wiki_plugin_kernel usage and mechanics overview |
+```bash
+owfa list                  # registry catalog: packages, versions, installed marks
+owfa add cuhksz            # install a domain package (stops at a semantic migration if one is staged)
+owfa pkg                   # what is installed here
+owfa upgrade               # later: replace the framework trees, preserve instance state
+```
 
-Command details are as disclosed in each SKILL.md under `.agents/skills/`—thirteen in all, listed in README; for how workflows chain together see `.meta/docs/usage.md`.
+These assume a global install (`npm i -g owfa` or `npm i -g owfadev`); without one, use `npx owfa …` / `npx owfadev …`.
 
-## Optional domain plugins
-
-The core deployment includes only vault and general wiki capabilities; external domains are enabled as needed. `kernel list-remote` shows the catalog; `kernel install <pkg> --yes` lands a package — plugins, commands, and in-repo connectors in one step (the bb course domain brings bb-cli, connecting to Blackboard with credentials stored only locally; lark declares the external lark-cli for Feishu; email brings mail-cli for a personal mailbox). On first use, each connector's skill ships its own disclosure.
-
-## Upgrade and uninstall
-
-- **Upgrade**: framework — `npx owfa upgrade` replaces `.meta/` and `.agents/skills/` and preserves the kernel's migration ledger, journal and registry cache; on the git channel, re-copy the two trees and rerun `all`; packages — `kernel upgrade` compares against the registry and applies per package (silent reinstall, never cascaded). `owfa upgrade --check` is a read-only report. A new version may stage **semantic migrations** — the kernel warns on three faces and walks you through; see [packages.md](packages.md). Data zones are unaffected
-- **Automated update check (cron example)**: a declaration page `wiki/cron/update-check.md` is all it takes —
-
-  ```yaml
-  ---
-  type: cron
-  cron:
-    trigger: time "0 9 * * *"
-    action: script
-  ---
-  ```
-
-  with `## Task` noting: run `python3 .meta/scripts/wiki_plugin_kernel.py upgrade` (the check-mode report above, framework-vs-template included); new versions surface as a todo line — never auto-installed. Declaration-as-source: any executor is a replaceable projection of the page; see the cron plugin.
-- **Uninstall**: package-level — `kernel uninstall <pkg> --yes` (four-clear; a declared teardown stages the semantic-deletion warning with a residual gate; data zones stay, lapsing into the deprecated posture); the whole framework — delete the two trees plus the AGENTS.md injection region block. The data zones are yours—dispose of them as you see fit
-
-## FAQ
-
-- **Target vault already has content?** The framework is append-only and changes nothing; existing content stays as is. New assets go into `vault/` via map; whether to proxy old content is your decision, made incrementally
-- **Can I copy the whole `.agents/` tree?** Yes—this repository's `.agents/` contains only `skills/`
-- **Cross-platform?** Pure standard library, no hardcoded paths; tested on Windows Git Bash; macOS and Linux need nothing extra
+- Package lifecycle, trust levels, offline installs, uninstall: [deployment.md](deployment.md#7-packages--finding-and-installing).
+- Daily use: [usage.md](usage.md); mechanics: [mechanics.md](mechanics.md).
+- Developing the framework itself: [CONTRIBUTING.md](../../CONTRIBUTING.md).
