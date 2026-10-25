@@ -199,6 +199,8 @@ owfa add cuhksz              # wraps kernel install + convergence
 python3 .meta/scripts/wiki_plugin_kernel.py install cuhksz --yes
 ```
 
+This is also what the agent's **plugin** command does: you can ask the agent to install a package by name, and it drives the same kernel. The CLI is the human/script equivalent.
+
 What lands: plugin masters under `.meta/plugins/domains/<pkg>/`, command masters, in-repo connectors, skill copies, injection blocks, registry rows. Then the kernel converges. If the package declares a **first-run semantic migration** (root packages such as `project` do), the install stages it and `validate` stays red until an agent performs the semantic step:
 
 ```bash
