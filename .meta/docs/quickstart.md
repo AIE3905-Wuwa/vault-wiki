@@ -12,13 +12,15 @@
 
 | Item | Requirement |
 |---|---|
-| Python | 3.x, pure standard library, zero dependencies |
+| Python | 3.9+, pure standard library, zero dependencies |
 | agent | A coding assistant that can read AGENTS.md and `.agents/skills/`, e.g. ZCode |
 | Obsidian | Optional, viewer only |
 
-## Two postures
+## Three postures
 
-Pick one before deploying — the five steps below serve both, but the entry differs:
+**0. One command (npm channel).** `npx owfa init <your-vault>` — fetches the framework, creates the directories, writes the AGENTS shell (or appends only the injection region to an existing one), and converges the projections. Then `cd <your-vault> && npx owfa doctor`. This is the same deployment as ①–⑤ below, mechanized; the manual steps remain the reference, the offline path and the developer path. Optional packages: `npx owfa init <dir> --packages cuhksz,lark`; later `npx owfa upgrade` replaces the framework trees and preserves the kernel's migration state. Details: [distribution.md](distribution.md).
+
+The manual steps below serve A and B; posture 0 skips them.
 
 **A. Just using it (clone-as-instance).** A clone of this repository *is* your instance: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git <your-vault>`, optionally `rm -rf <your-vault>/.git && git init` to own the history, then do steps ③–⑤ below (AGENTS.md shell, four directories, converge). Packages install on demand from the registry — `kernel install <pkg> --yes`. No development intent needed; you never touch the framework internals.
 
@@ -74,7 +76,7 @@ The core deployment includes only vault and general wiki capabilities; external 
 
 ## Upgrade and uninstall
 
-- **Upgrade**: framework — re-copy `.meta/` and `.agents/skills/` over the old ones, rerun `all` (a kernel self-update command is designed but not yet shipped; the copy is manual until then); packages — `kernel upgrade` compares against the registry and applies per package (silent reinstall, never cascaded). A new version may stage **semantic migrations** — the kernel warns on three faces and walks you through; see [packages.md](packages.md). Data zones are unaffected
+- **Upgrade**: framework — `npx owfa upgrade` replaces `.meta/` and `.agents/skills/` and preserves the kernel's migration ledger, journal and registry cache; on the git channel, re-copy the two trees and rerun `all`; packages — `kernel upgrade` compares against the registry and applies per package (silent reinstall, never cascaded). `owfa upgrade --check` is a read-only report. A new version may stage **semantic migrations** — the kernel warns on three faces and walks you through; see [packages.md](packages.md). Data zones are unaffected
 - **Automated update check (cron example)**: a declaration page `wiki/cron/update-check.md` is all it takes —
 
   ```yaml

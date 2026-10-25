@@ -1,8 +1,14 @@
-# vault-wiki
+# OWFA — One Workspace For All (agents)
+
+> **OWFA** is the distribution name of the **vault-wiki** framework: `npx owfa init` deploys it, `npx owfa upgrade` updates it. The repository keeps the technical name.
 
 **A team-maintained agent knowledge-base framework**: vault holds real assets, wiki keeps md proxies and native notes, and the agent reads/writes with zero priors per the SASU-L disclosure order. md plus plain files are the foundation; Obsidian and friends are replaceable viewers.
 
-> Status: **alpha** — capability-wise a prototype matured by six weeks of real daily use (born 2026-09-08, validated by two rounds of real operation plus a cold-start disclosure audit, the bb course family live across four courses); distribution-wise v0.3 is the first shape others can install — covered by exactly one fresh-instance acceptance run, zero outside users. Beta gate: behavior contracts (#34) landed · both members running real installs · the legacy-instance conversion walked through · the acceptance script replayable green. `.meta/VERSION` tracks the kernel contract, not product maturity — stage labels live here and in release notes. Universalization and matrix testing remain deferred. Converted from personal use to a team project on 2026-10-02. Docs language switched to English on 2026-10-06 (historical Chinese log entries preserved as-is). 2026-10-12: repo transferred to the GitHub org **AIE3905-Wuwa**; the standardization-and-split improvement phase opened — package binding landed (core 20 + 5 domain packages, see [.meta/docs/packages.md](.meta/docs/packages.md)); dev rules now live in [CONTRIBUTING.md](CONTRIBUTING.md). 2026-10-13: VERSION 0.3 (tag v0.3) — registry discovery/install, subset installs (--without), upgrade chaining, teardown (x->0) closing the migration algebra, the instance git contract; validated end-to-end by a fresh-instance acceptance run.
+> Status: **alpha** — capability-wise a prototype matured by six weeks of real daily use (born 2026-09-08, validated by two rounds of real operation plus a cold-start disclosure audit, the bb course family live across four courses); distribution-wise v0.3 is the first shape others can install — covered by exactly one fresh-instance acceptance run, zero outside users. Beta gate: behavior contracts (#34) landed · both members running real installs · the legacy-instance conversion walked through · the acceptance script replayable green. `.meta/VERSION` tracks the kernel contract, not product maturity — stage labels live here and in release notes. Universalization and matrix testing remain deferred. Converted from personal use to a team project on 2026-10-02. Docs language switched to English on 2026-10-06 (historical Chinese log entries preserved as-is). 2026-10-12: repo transferred to the GitHub org **AIE3905-Wuwa**; the standardization-and-split improvement phase opened — package binding landed (core 20 + 5 domain packages, see [.meta/docs/packages.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/packages.md)); dev rules now live in [CONTRIBUTING.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/CONTRIBUTING.md). 2026-10-13: VERSION 0.3 (tag v0.3) — registry discovery/install, subset installs (--without), upgrade chaining, teardown (x->0) closing the migration algebra, the instance git contract; validated end-to-end by a fresh-instance acceptance run. 2026-10-25: the framework body gets a distribution channel of its own — npm package `owfa`, `npx owfa init` / `owfa upgrade`, closing the "clone + copy two trees + hand-write AGENTS.md" gap (issues #45/#46).
+
+## The name
+
+**OWFA — One Workspace For All (agents).** One workspace — the directory you own, holding `vault/`, `wiki/`, `AGENTS.md` and the framework body — that every agent you use re-enters instead of being re-introduced each session. *All* means all of *your* agents, not all people and not a hosted service; the human stays the owner and the audit anchor. `vault-wiki` remains the technical name of the code; `owfa` is the name it ships under, because a name that resolves in a package manager is an address rather than a slogan. Full rationale, objections and collision policy: [`.meta/docs/naming.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/naming.md).
 
 ## What it does
 
@@ -35,32 +41,51 @@ Let an AI coding agent run a "personal wiki" for you:
 | `connectors/` | Connector masters: deployment-side CLI factual interface + skill usage disclosure. `connectors/*/SKILL.md` lands in `.agents/skills/` via kernel deploy; currently bb-cli, sis-cli, mail-cli, bili-cli. Connectors ride with their packages in `PKG.yaml` — physical relocation into the per-package repos happens at the split round |
 | Packages | The index lives in the [registry](https://github.com/AIE3905-Wuwa/registry) (Obsidian-model: self-hosted packages, one-line PR is the listing gate). `kernel install`/`list-remote` resolve against it; unindexed repos stay installable with `--yes` (trust: unknown). The org repos `pkg-cuhksz` / `pkg-lark` / `pkg-email` / `pkg-bili` / `pkg-project` / `pkg-github` hold the packages, split with full file lineage |
 | `.agents/skills/` | Deployment copies of command & connector skills (framework commands after the split; connector skills arrive with their packages) |
-| `test-repo/` | Local test sandbox — untracked since 2026-10-13 (owner re-ruling; a fresh clone carries none of it). A scratch deployment for experiments needing an AGENTS.md context; setup and rules in [`.meta/docs/sandbox.md`](.meta/docs/sandbox.md). The framework repo itself carries no AGENTS.md — library posture; dev rules live in [CONTRIBUTING.md](CONTRIBUTING.md) |
+| `bin/` + `templates/` + `package.json` | The npm channel: `owfa` CLI, AGENTS seed, package manifest. `test/` and `scripts/` are development-only and never ship |
+| `test-repo/` | Local test sandbox — untracked since 2026-10-13 (owner re-ruling; a fresh clone carries none of it). A scratch deployment for experiments needing an AGENTS.md context; setup and rules in [`.meta/docs/sandbox.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/sandbox.md). The framework repo itself carries no AGENTS.md — library posture; dev rules live in [CONTRIBUTING.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/CONTRIBUTING.md) |
 | `.meta/docs/` | Human docs: `intro.md` introduction, `mechanics.md` mechanics, `usage.md` usage guide, `quickstart.md` deployment walkthrough, `instance-git.md` the instance-side git minimal contract, `research-*.md` research files — direct links at the end. Authoritative mechanics live in the kernel reference skill; docs do not mirror mechanics |
 
 ## Collaboration
 
-This repository is a team project: three members with write access, everything through PRs (1 approving review to merge, `enforce_admins` on); the owner holds final say on repo settings, permissions and charter/kernel changes. Data red lines, commit flow and version discipline are summarized in [CONTRIBUTING.md](CONTRIBUTING.md) — the authoritative dev rules; the change trail is git history + PRs + issues (the repo keeps no run log).
+This repository is a team project: three members with write access, everything through PRs (1 approving review to merge, `enforce_admins` on); the owner holds final say on repo settings, permissions and charter/kernel changes. Data red lines, commit flow and version discipline are summarized in [CONTRIBUTING.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/CONTRIBUTING.md) — the authoritative dev rules; the change trail is git history + PRs + issues (the repo keeps no run log).
 
 ## Getting started
 
-Prerequisites: Python 3, pure stdlib, no install needed for the framework itself (connectors carry their own deps); git; an agent environment that reads AGENTS.md and skills, e.g. ZCode; Obsidian optional, viewer only.
+Two ways in. **Channel (recommended):** `npx owfa init my-workspace` — Node 16.7+ for the installer, Python 3 for the framework; nothing to clone. **Manual:** clone this repository and follow the five steps in [quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md), then `python .meta/scripts/wiki_plugin_kernel.py all`.
+
+Prerequisites: Python 3.9+, pure stdlib, no install needed for the framework itself (connectors carry their own deps); Node 16.7+ only for the npm channel; git recommended (instance snapshots); an agent environment that reads AGENTS.md and skills, e.g. ZCode; Obsidian optional, viewer only.
 
 Open an agent session at the repository root. AGENTS.md is the constitution, containing the plugin injection region; the thirteen commands trigger by natural language: **map / save / profile / query / check / plugin / lark-map / bb-map / asset-read / kernel reference / teach / quiz / track** — map, save, profile, query, check, plugin, lark-map, bb-map, asset-read, wiki_plugin_kernel, bb-teach, bb-quiz, bb-track; masters live in `.meta/command/`. Put a file into `vault/` and say "map" to the agent — that is the first use.
 
 ## Deployment
 
-The framework proper is three things: `.meta/`, `.agents/skills/`, and the AGENTS.md injection region. Deployment is an additive copy: copy the two trees, write the AGENTS shell, create empty directories, converge with the kernel; existing content in the target repo stays untouched. Derived pages self-build on first run — no hand-crafting. Step-by-step walkthrough in [.meta/docs/quickstart.md](.meta/docs/quickstart.md), rehearsed against a clean directory.
+### npm channel (recommended)
+
+```bash
+npx owfa init my-workspace        # framework + AGENTS shell + directories + kernel convergence
+cd my-workspace
+npx owfa doctor                   # python / framework / injection markers / kernel validate
+npx owfa upgrade                  # later: replace the framework trees, preserve instance state
+npx owfa add cuhksz               # optional: install a domain package from the registry
+```
+
+`init` is additive: existing content is untouched, an existing `AGENTS.md` is preserved and only the injection region is appended. `upgrade` replaces `.meta/` and `.agents/skills/` (instance data is never touched) and keeps the kernel's migration ledger, journal and registry cache. Versioning, release runbook and security posture: [`.meta/docs/distribution.md`](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/distribution.md).
+
+### Manual (git channel)
+
+The framework proper is three things: `.meta/`, `.agents/skills/`, and the AGENTS.md injection region. Deployment is an additive copy: copy the two trees, write the AGENTS shell, create empty directories, converge with the kernel; existing content in the target repo stays untouched. Derived pages self-build on first run — no hand-crafting. Step-by-step walkthrough in [.meta/docs/quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md), rehearsed against a clean directory.
 
 ## Doc pointers
 
-- [.meta/docs/packages.md](.meta/docs/packages.md) — package mechanism and design rationale: layout, PKG.yaml, invariants, versions, uninstall contract, decision ledger
-- [.meta/docs/developer.md](.meta/docs/developer.md) — developer guide: where a plugin lands (the three-path table), the dev loop, registration and discovery
-- [.meta/docs/agents-example.md](.meta/docs/agents-example.md) / [.meta/docs/log-example.md](.meta/docs/log-example.md) — instance seeds for AGENTS.md and log.md (the framework repo itself carries neither)
-- [.meta/docs/intro.md](.meta/docs/intro.md) — introduction: why this framework, narrative & lineage
-- [.meta/docs/mechanics.md](.meta/docs/mechanics.md) — mechanics: each mechanism one level deeper, with a bb-family walkthrough; read before touching the framework
-- [.meta/docs/usage.md](.meta/docs/usage.md) — usage guide: the three work loops (library keeping, course learning, collaborative development)
-- [.meta/docs/quickstart.md](.meta/docs/quickstart.md) — quick start: five deployment steps and first-run verification
+- [.meta/docs/naming.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/naming.md) — the name: canonical expansion, what each word commits to, two names two jobs, objections, collision policy
+- [.meta/docs/distribution.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/distribution.md) — the npm channel: commands, artifacts, version invariant, release runbook, security posture
+- [.meta/docs/packages.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/packages.md) — package mechanism and design rationale: layout, PKG.yaml, invariants, versions, uninstall contract, decision ledger
+- [.meta/docs/developer.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/developer.md) — developer guide: where a plugin lands (the three-path table), the dev loop, registration and discovery
+- [.meta/docs/agents-example.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/agents-example.md) / [.meta/docs/log-example.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/log-example.md) — instance seeds for AGENTS.md and log.md (the framework repo itself carries neither)
+- [.meta/docs/intro.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/intro.md) — introduction: why this framework, narrative & lineage
+- [.meta/docs/mechanics.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/mechanics.md) — mechanics: each mechanism one level deeper, with a bb-family walkthrough; read before touching the framework
+- [.meta/docs/usage.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/usage.md) — usage guide: the three work loops (library keeping, course learning, collaborative development)
+- [.meta/docs/quickstart.md](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/.meta/docs/quickstart.md) — quick start: five deployment steps and first-run verification
 - `.meta/protocol/` — field registry, action discipline, disclosure paradigm
 
 ## History
@@ -69,5 +94,5 @@ The framework proper is three things: `.meta/`, `.agents/skills/`, and the AGENT
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](https://github.com/AIE3905-Wuwa/vault-wiki/blob/master/LICENSE).
 
