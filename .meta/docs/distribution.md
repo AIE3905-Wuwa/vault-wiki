@@ -38,10 +38,12 @@ owfa init [dir] [--name NAME] [--packages a,b] [--force]
 owfa upgrade [dir] [--check] [--backup] [--force]
 owfa doctor [dir]
 owfa add <pkg> [--yes] [--without a,b]
+owfa list
+owfa pkg
 owfa version
 ```
 
-**init** — additive deployment, the five quickstart steps mechanized:
+**init** — additive deployment, the five manual steps in [deployment.md](deployment.md) mechanized:
 
 1. copies `.meta/` and `.agents/skills/` from the tarball
 2. creates `vault/`, `wiki/notes/`, `wiki/sessions/`, `wiki/vault/`
@@ -63,7 +65,9 @@ A package may declare a **first-run semantic migration** (root packages such as 
 
 **doctor** — prints Node/Python/framework versions, checks the AGENTS injection markers, runs `kernel validate`. It never writes.
 
-**add** — thin wrapper over `kernel install` plus convergence. Registry trust rules still apply; `--yes` is forwarded.
+**add** — thin wrapper over `kernel install` plus convergence. Registry trust rules still apply; `--yes` is forwarded. A staged first-run migration stops the command with the exact `migrate` hint (exit non-zero) instead of a false "done".
+
+**list** — `kernel list-remote`: the registry catalog with package versions, framework compat floors, member plugins, trust levels and installed marks. **pkg** — `kernel pkg`: what is installed in this instance (packages, members, connectors, core remainder).
 
 ## Version invariant
 

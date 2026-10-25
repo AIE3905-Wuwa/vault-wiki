@@ -379,6 +379,19 @@ function cmdDoctor(args) {
   return code;
 }
 
+
+function cmdList() {
+  const target = process.cwd();
+  if (!readVersion(target)) fail(`${target} is not an OWFA instance — run \`owfa init\` first`);
+  return kernel(target, ["list-remote"]);
+}
+
+function cmdPkg() {
+  const target = process.cwd();
+  if (!readVersion(target)) fail(`${target} is not an OWFA instance — run \`owfa init\` first`);
+  return kernel(target, ["pkg"]);
+}
+
 function cmdAdd(args) {
   const target = process.cwd();
   const pkg = args._[0];
@@ -405,11 +418,13 @@ usage:
   owfa doctor [dir]     python / framework / AGENTS.md / kernel validate
   owfa add <pkg> [--yes] [--without a,b]
       install a domain package from the registry, then converge
+  owfa list             registry catalog (versions, compat, installed marks)
+  owfa pkg              installed package inventory (members, core remainder)
   owfa version          CLI and framework versions
   owfa help
 
 notes:
-  - python 3.8+ is required to run the framework; node is only the installer
+  - python 3.9+ is required to run the framework; node is only the installer
   - \`init\` never deletes instance data; \`upgrade\` preserves the kernel's
     migration ledger, journal and registry cache
   - no install/postinstall scripts: npm install executes nothing
@@ -437,6 +452,10 @@ function main() {
       return cmdDoctor(args);
     case "add":
       return cmdAdd(args);
+    case "list":
+      return cmdList();
+    case "pkg":
+      return cmdPkg();
     default:
       usage();
       return 2;

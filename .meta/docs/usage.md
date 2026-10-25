@@ -1,6 +1,6 @@
 # Usage Guide
 
-> Audience: the vault owner after deployment completes — the next step after quickstart — plus members who want to understand the collaboration shape. Command details are authoritatively disclosed in each SKILL.md under `.agents/skills/`. This document is about chaining workflows: how single commands connect into loops. Written 2026-10-04.
+> Audience: the vault owner after deployment completes — the next step after deployment — plus members who want to understand the collaboration shape. Command details are authoritatively disclosed in each SKILL.md under `.agents/skills/`. This document is about chaining workflows: how single commands connect into loops. Written 2026-10-04.
 
 ## Loop One: Vault Stewardship
 
