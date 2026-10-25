@@ -12,7 +12,7 @@ Dev rules of the vault-wiki framework. The framework repo is a library: no insta
 
 1. Branch off latest master, name it `module/topic` (e.g. `feature/bb-notes`, `kernel/pkg-reconcile`)
 2. Small commits, one thing each, message format `模块: 概述`
-3. Before opening the PR, self-check: at the framework root `python .meta/scripts/wiki_plugin_kernel.py validate` (plus `pkg` when package manifests changed) must pass; a full mechanical run needs an AGENTS.md context — use a local sandbox (see [`.meta/docs/sandbox.md`](.meta/docs/sandbox.md)) or a real instance, and `kernel all` must be green. The diff contains development artifacts only
+3. Before opening the PR, self-check: at the framework root `python .meta/scripts/wiki_plugin_kernel.py validate` (plus `pkg` when package manifests changed) must pass; a full mechanical run needs an AGENTS.md context — use a local sandbox (see [`.meta/docs/sandbox.md`](.meta/docs/sandbox.md)) or a real instance, and `kernel all` must be green. Touching the npm channel (`bin/`, `package.json`, `templates/`, `scripts/verify-release.js`) also runs `node scripts/verify-release.js && node test/smoke.js`. The diff contains development artifacts only
 4. Push the branch, open a PR against master — the standard review channel
 5. Kernel/charter PRs: owner reviews. Content/domain PRs: peer review among members
 6. After merge the head branch is deleted automatically; every merge is recorded (PR + commit trail)
@@ -38,6 +38,10 @@ Real course files; grades and submission records; personal privacy; account cred
 ## Version discipline
 
 Read the current state before changing a plugin or connector: versions advance along the changelog — no pre-reserving numbers, no gaps. Conflicts with existing plans get aligned in the group first. Framework-level version is the `.meta/VERSION` anchor + git tag (see [`.meta/docs/packages.md`](.meta/docs/packages.md)); package versions ride their own tags and never lockstep with member plugin versions.
+
+### Release (npm channel)
+
+The framework body ships as the npm package `owfa`, and the package version rides the framework anchor: `.meta/VERSION` `0.3` → package `0.3.x`. A release is a version bump in both files, a commit `release: framework X.Y.Z`, and a `vX.Y.Z` tag push. The tag triggers [`.github/workflows/publish.yml`](.github/workflows/publish.yml), which re-runs the release gate and publishes with provenance; the gate refuses version/tag drift and any local state (bytecode, ledger, journal, cache) in the tarball. Full runbook: [`.meta/docs/distribution.md`](.meta/docs/distribution.md).
 
 ## Packages
 

@@ -1,0 +1,46 @@
+{
+  "name": "owfa",
+  "version": "0.3.0",
+  "description": "OWFA — One Workspace For All (agents). Install, initialize and upgrade the vault-wiki agent knowledge-base framework.",
+  "keywords": [
+    "owfa",
+    "vault-wiki",
+    "agent",
+    "ai",
+    "knowledge-base",
+    "wiki",
+    "markdown",
+    "obsidian",
+    "scaffold"
+  ],
+  "homepage": "https://github.com/AIE3905-Wuwa/vault-wiki#readme",
+  "bugs": {
+    "url": "https://github.com/AIE3905-Wuwa/vault-wiki/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AIE3905-Wuwa/vault-wiki.git"
+  },
+  "license": "MIT",
+  "author": "AIE3905-Wuwa",
+  "bin": {
+    "owfa": "bin/owfa.js"
+  },
+  "files": [
+    ".meta",
+    ".agents",
+    "bin",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=16.7"
+  },
+  "scripts": {
+    "test": "node test/smoke.js",
+    "prepack": "node scripts/clean-local-state.js",
+    "prepublishOnly": "node scripts/verify-release.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

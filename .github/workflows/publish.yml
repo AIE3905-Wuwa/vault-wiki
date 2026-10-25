@@ -1,0 +1,36 @@
+name: publish npm channel
+
+# The framework body ships as the npm package `owfa`. A tag is the release
+# trigger; the gate refuses version/tag drift and any local state in the
+# tarball. Requires the repository secret NPM_TOKEN (publish rights to `owfa`)
+# and a public repository for provenance.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Release gate (version rides .meta/VERSION, tag matches, no local state)
+        run: node scripts/verify-release.js
+
+      - name: End-to-end channel smoke (init / doctor / upgrade)
+        run: node test/smoke.js
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
