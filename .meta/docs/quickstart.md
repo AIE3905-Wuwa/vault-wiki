@@ -20,13 +20,13 @@
 
 Pick one before deploying — the five steps below serve both, but the entry differs:
 
-**A. Just using it (clone-as-instance).** A clone of this repository *is* your instance: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git <your-vault>`, optionally `rm -rf <your-vault>/.git && git init` to own the history, then do steps ③–⑤ below (AGENTS.md shell, four directories, converge). Packages install on demand from the registry — `kernel install <pkg> --yes`. No development intent needed; you never touch the framework internals.
+**A. Just using it (clone-as-instance).** A clone of this repository *is* your instance: `git clone https://github.com/owfadev/owfa.git <your-vault>`, optionally `rm -rf <your-vault>/.git && git init` to own the history, then do steps ③–⑤ below (AGENTS.md shell, four directories, converge). Packages install on demand from the registry — `kernel install <pkg> --yes`. No development intent needed; you never touch the framework internals.
 
 **B. Developing (template + instance).** Keep a clone of this repository as the *template* — development, experiments and upstream updates happen there, following [CONTRIBUTING.md](../../CONTRIBUTING.md). Separately deploy a real *instance* (your actual vault — posture A's steps, or the embedding steps below); when the template gains updates, review the diff and sync selectively into the instance, then converge — see the "Template + instance workflow" section of CONTRIBUTING.md. To develop is to run a real instance: the framework is validated in actual use, not in the abstract.
 
 ## Five deployment steps
 
-**① Get the framework**: `git clone https://github.com/AIE3905-Wuwa/vault-wiki.git`, or download the ZIP and unzip it (the old personal-repo address redirects).
+**① Get the framework**: `git clone https://github.com/owfadev/owfa.git`, or download the ZIP and unzip it (the old personal-repo address redirects).
 
 **② Copy two trees** to the target vault root: `.meta/` and `.agents/skills/`. Plugin masters, command masters and copies, protocol artifacts, and mechanical scripts all live there. The clone ships **core 20 only** — no domain packages. Packages are added per need from the registry: `python3 .meta/scripts/wiki_plugin_kernel.py install <pkg> --yes` (see [packages.md](packages.md)); offline alternative — copy a package's `domains/<pkg>/` directory in and rerun `all`.
 
