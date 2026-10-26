@@ -1,6 +1,6 @@
 # Contributing
 
-Dev rules of the vault-wiki framework. The framework repo is a library: no instance data, no run log — the change trail is git history + PRs + issues.
+Dev rules of the owfa framework. The framework repo is a library: no instance data, no run log — the change trail is git history + PRs + issues.
 
 ## Roles
 

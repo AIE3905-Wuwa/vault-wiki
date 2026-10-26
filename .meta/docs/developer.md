@@ -7,7 +7,7 @@
 | Your plugin is… | It lands… | Trust gate |
 |---|---|---|
 | a **domain member** (depends chain reaches a domain root, e.g. bb-family) | that domain package's repo — PR there. Not a choice: the family closure claims it mechanically (`PKG.members` must include you or validate errors) | package maintainers |
-| a **new domain** of its own | your own repo as a package (`PKG.yaml`, see [packages.md](packages.md)) + a one-line PR to the [registry](https://github.com/AIE3905-Wuwa/registry) | the registry PR — the human-review gate (inject text and connectors are the security faces, #12) |
+| a **new domain** of its own | your own repo as a package (`PKG.yaml`, see [packages.md](packages.md)) + a one-line PR to the [registry](https://github.com/owfadev/registry) | the registry PR — the human-review gate (inject text and connectors are the security faces, #12) |
 | **cross-cutting / non-domain** (global piece) | the framework repo's `core/` — PR there | owner review (charter-level, highest bar) |
 
 A single plugin never ships bare — the package is the distribution unit. A lone plugin is a single-member package (12 lines of PKG.yaml, see email/bili/project). Users prune with `--without` (subset grammar), so contributing into a big package never forces users to install all of it.
@@ -28,6 +28,6 @@ A single plugin never ships bare — the package is the distribution unit. A lon
 
 ## Discovery: how people (and agents) find your work
 
-- **Before registration**: your repo is already installable (`kernel install <owner>/<repo> --yes`, trust: unknown) and findable via GitHub topics — tag the repo `vault-wiki-package`
+- **Before registration**: your repo is already installable (`kernel install <owner>/<repo> --yes`, trust: unknown) and findable via GitHub topics — tag the repo `owfa-package`
 - **After the registry PR**: listed in `kernel list-remote` (the agent surface), installable without `--yes`, trust: reviewed-3rd-party
 - **Write the summary for agents** — the registry `summary` line and your SKILL.md `description` fields are what agents actually match against; a vague summary is undiscoverable

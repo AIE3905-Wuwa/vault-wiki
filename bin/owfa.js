@@ -2,7 +2,7 @@
 /**
  * OWFA — One Workspace For All (agents).
  *
- * The npm channel for the vault-wiki framework. This CLI owns exactly three
+ * The npm channel for the owfa framework. This CLI owns exactly three
  * things the framework itself cannot own: fetching a complete framework tree,
  * initializing a directory without hand-copying it, and replacing that tree
  * on upgrade. Everything semantic stays in the Python kernel
@@ -408,7 +408,7 @@ function cmdAdd(args) {
 
 function usage() {
   out(`owfa ${PKG.version} — One Workspace For All (agents)
-the vault-wiki framework's install and upgrade channel
+the owfa framework's install and upgrade channel
 
 usage:
   owfa init [dir] [--name NAME] [--packages a,b] [--force]
