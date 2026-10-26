@@ -909,8 +909,8 @@ def do_residual(pkg_id, pkgs):
 # ---------- process round: install / uninstall / list-remote / upgrade (issue #20 流程轮) ----------
 
 INDEX_FILENAME = "INDEX.yaml"
-INDEX_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/registry/master/INDEX.yaml"
-FW_VERSION_REMOTE = "https://raw.githubusercontent.com/AIE3905-Wuwa/vault-wiki/master/.meta/VERSION"
+INDEX_REMOTE = "https://raw.githubusercontent.com/owfadev/registry/master/INDEX.yaml"
+FW_VERSION_REMOTE = "https://raw.githubusercontent.com/owfadev/owfa/master/.meta/VERSION"
 
 
 def load_index(errors, quiet=False):

@@ -82,7 +82,7 @@ uninstall:              # declaration, never executable hooks
 | `validate --scope <pkg>` | single-package tolerant mode (D3): deps absent outside the package degrade to warnings — the CI shape for package repos post-split, run with a framework checkout alongside |
 | `pkg` | package inventory: members, connectors, implicit core remainder |
 | `residual <pkg>` | D6 residual scan: greps handwritten AGENTS region + profile/language/calendar/todo/cron anchors for member references (the kernel-managed injection region is skipped — it is cleaned mechanically) |
-| `install <pkg>[@tag]` | resolve the [registry](https://github.com/AIE3905-Wuwa/registry) index (members reconciled against PKG.yaml) → trust gate → clone → copy masters/connectors/commands → converge. `install <owner/repo> --yes` installs an unindexed repository (trust: unknown); `--path <dir>` installs a local one (channel C) |
+| `install <pkg>[@tag]` | resolve the [registry](https://github.com/owfadev/registry) index (members reconciled against PKG.yaml) → trust gate → clone → copy masters/connectors/commands → converge. `install <owner/repo> --yes` installs an unindexed repository (trust: unknown); `--path <dir>` installs a local one (channel C) |
 | `uninstall <pkg> --yes` | D6 four-clear (masters/commands/connectors/skills) + convergence + residual scan + retains/credentials reminders — data never touched |
 | `list-remote` | index table with installed marks |
 | `plan <pkg>` | dependency disclosure before a package lands |
