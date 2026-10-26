@@ -110,4 +110,4 @@ The order is not bureaucratic: npm support evaluates a project by its public hom
 - `.meta/docs/distribution.md` — the channel's version invariant, fallback and release runbook
 - `scripts/verify-release.js` — the release gate (name/bin agreement, version rides `.meta/VERSION`, tag matches)
 
-The framework's internal identifiers stay `vault-wiki`; nothing in the kernel, plugin IDs, or registry depends on the brand.
+Update 2026-10-26: the repository itself is renamed to `owfa` (`owfadev/owfa`), and the public copy uses OWFA / OWFA Core; `vault-wiki` survives only in history and old links. Nothing in the kernel, plugin IDs, or registry depends on the brand.

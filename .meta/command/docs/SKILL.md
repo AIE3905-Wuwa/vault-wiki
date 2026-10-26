@@ -21,4 +21,4 @@ Read [`.meta/docs/map.md`](../../docs/map.md) — the routing table (what to rea
 
 ## 3. Filing feedback / issues
 
-The routing table lives in [`.meta/docs/agent-behavior.md`](../../docs/agent-behavior.md) §Routing: framework → vault-wiki; package members → the matching `pkg-*` repo; new-plugin proposals → incubation on vault-wiki.
+The routing table lives in [`.meta/docs/agent-behavior.md`](../../docs/agent-behavior.md) §Routing: framework → owfa; package members → the matching `pkg-*` repo; new-plugin proposals → incubation on owfa.

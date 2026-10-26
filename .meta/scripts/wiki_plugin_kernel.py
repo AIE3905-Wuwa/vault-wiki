@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""vault-wiki plugin lifecycle mechanical kernel ((un)install / compliance / dependencies / injection / registry / copy sync).
+"""owfa plugin lifecycle mechanical kernel ((un)install / compliance / dependencies / injection / registry / copy sync).
 
 Positioning (see .meta/protocol/actions.md execution principles): deterministic structural
 operations go to this script; semantic judgment goes to the LLM. The script touches only
