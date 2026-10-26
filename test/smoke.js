@@ -112,6 +112,83 @@ try {
     assert.strictEqual(fs.readFileSync(path.join(empty, ".meta", "migrations", "pending.json"), "utf8"), "{}\n");
   });
 
+  // Review P1 (PR #53): a replace must carry instance-owned state across —
+  // installed package masters, package commands, pending-migration materials
+  // and skills the incoming tree does not ship.
+  const DEMO_PLUGIN = [
+    "id: demo", "schema_version: 1", "version: 0.1", "depends:", "  - vault",
+    "updated: 2026-10-26", 'attachment: []', "fields: {}",
+    'inject: "demo package projection line (smoke fixture)"', "usage: []",
+  ].join("\n") + "\n";
+  const DEMO_CMD = [
+    "---", "name: demo-cmd", "description: smoke fixture command", "owner: framework",
+    "---", "", "# demo-cmd", "", "fixture body",
+  ].join("\n") + "\n";
+
+  step("upgrade preserves installed package, package command, pending migration and standalone skill", () => {
+    fs.writeFileSync(path.join(empty, ".meta", "VERSION"), "0.2", "utf8"); // stale again
+    const dom = path.join(empty, ".meta", "plugins", "domains", "demo");
+    fs.mkdirSync(dom, { recursive: true });
+    fs.writeFileSync(path.join(dom, "PLUGIN.yaml"), DEMO_PLUGIN, "utf8");
+    fs.writeFileSync(path.join(dom, "PLUGIN.md"), "# demo\n\nsmoke fixture package\n", "utf8");
+    fs.mkdirSync(path.join(empty, ".meta", "command", "demo-cmd"), { recursive: true });
+    fs.writeFileSync(path.join(empty, ".meta", "command", "demo-cmd", "SKILL.md"), DEMO_CMD, "utf8");
+    fs.mkdirSync(path.join(empty, ".meta", "migrations", "demo"), { recursive: true });
+    fs.writeFileSync(path.join(empty, ".meta", "migrations", "demo", "init.md"), "pending migration fixture\n", "utf8");
+    fs.writeFileSync(path.join(empty, ".meta", "migrations", "pending.json"), '{"demo":{}}\n', "utf8");
+    fs.mkdirSync(path.join(empty, ".agents", "skills", "custom-user"), { recursive: true });
+    fs.writeFileSync(path.join(empty, ".agents", "skills", "custom-user", "SKILL.md"), "# custom-user\n\nkeep me\n", "utf8");
+    // pending semantic migrations keep validate red by design (tri-face warning):
+    // the trees ARE replaced, but the upgrade reports the blocked convergence.
+    const r = run(["upgrade", empty], tmpRoot);
+    assert.notStrictEqual(r.status, 0, "upgrade should report the pending-migration block");
+    assert.ok(/pending semantic migrations/.test(r.stdout + r.stderr), r.stdout + r.stderr);
+    assert.strictEqual(fs.readFileSync(path.join(empty, ".meta", "VERSION"), "utf8").trim(), FW, "trees not replaced");
+    assert.ok(fs.existsSync(path.join(empty, ".meta", "plugins", "domains", "demo", "PLUGIN.yaml")), "package master lost");
+    assert.ok(fs.existsSync(path.join(empty, ".meta", "command", "demo-cmd", "SKILL.md")), "package command lost");
+    assert.ok(fs.existsSync(path.join(empty, ".meta", "migrations", "demo", "init.md")), "pending migration material lost");
+    assert.strictEqual(fs.readFileSync(path.join(empty, ".meta", "migrations", "pending.json"), "utf8"), '{"demo":{}}\n');
+    assert.ok(fs.existsSync(path.join(empty, ".agents", "skills", "custom-user", "SKILL.md")), "standalone skill lost");
+    // fresh framework skills must not be shadowed by the carry-over
+    assert.ok(fs.existsSync(path.join(empty, ".agents", "skills", "map", "SKILL.md")), "framework skill lost");
+    // with the migration cleared, the same instance converges green and the
+    // package command re-deploys (deploy rides after validate in `kernel all`)
+    fs.writeFileSync(path.join(empty, ".meta", "migrations", "pending.json"), "{}\n", "utf8");
+    const r2 = run(["upgrade", empty, "--force"], tmpRoot);
+    assert.strictEqual(r2.status, 0, "re-sync after clearing pending failed: " + r2.stdout + r2.stderr);
+    assert.ok(fs.existsSync(path.join(empty, ".agents", "skills", "demo-cmd", "SKILL.md")), "package command not re-deployed");
+    const v = run(["doctor", empty], tmpRoot);
+    assert.strictEqual(v.status, 0, "instance with carried package fails doctor: " + v.stdout);
+    // scrub the fixture so later steps start from a clean instance
+    fs.rmSync(path.join(empty, ".meta", "plugins", "domains", "demo"), { recursive: true, force: true });
+    fs.rmSync(path.join(empty, ".meta", "command", "demo-cmd"), { recursive: true, force: true });
+    fs.rmSync(path.join(empty, ".agents", "skills", "custom-user"), { recursive: true, force: true });
+    fs.rmSync(path.join(empty, ".agents", "skills", "demo-cmd"), { recursive: true, force: true });
+    fs.rmSync(path.join(empty, ".meta", "migrations", "demo"), { recursive: true, force: true });
+  });
+
+  // Review P2 (PR #53): doctor fails when a required condition is missing.
+  step("doctor fails when AGENTS.md is missing", () => {
+    const agents = path.join(empty, "AGENTS.md");
+    const backup = agents + ".smoke-bak";
+    fs.renameSync(agents, backup);
+    const r = run(["doctor", empty], tmpRoot);
+    fs.renameSync(backup, agents);
+    assert.notStrictEqual(r.status, 0, "doctor exited 0 with AGENTS.md missing");
+    assert.ok(/AGENTS\.md: MISSING/.test(r.stdout), r.stdout);
+    assert.ok(/doctor: failed/.test(r.stdout), r.stdout);
+  });
+
+  step("doctor fails when injection markers are broken", () => {
+    const agents = path.join(empty, "AGENTS.md");
+    const original = fs.readFileSync(agents, "utf8");
+    fs.writeFileSync(agents, original.replace("<!-- wiki-inject:end -->", "<!-- removed -->"), "utf8");
+    const r = run(["doctor", empty], tmpRoot);
+    fs.writeFileSync(agents, original, "utf8");
+    assert.notStrictEqual(r.status, 0, "doctor exited 0 with broken markers");
+    assert.ok(/MISSING injection markers/.test(r.stdout), r.stdout);
+  });
+
   step("init --force preserves kernel state and instance data", () => {
     fs.writeFileSync(path.join(empty, "vault", "keep.txt"), "asset\n", "utf8");
     const r = run(["init", empty, "--force"]);

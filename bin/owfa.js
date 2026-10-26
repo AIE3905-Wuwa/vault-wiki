@@ -91,18 +91,86 @@ function copyPayload(target, { replace = false } = {}) {
   const skip = (src) => {
     const base = path.basename(src);
     if (base === "__pycache__" || base.endsWith(".pyc") || base === ".DS_Store") return false;
-    if (PRESERVED.some((p) => src.endsWith(path.sep + p) || src.endsWith("/" + p.replaceAll(path.sep, "/")))) return false;
     if (base === "smoke-tmp") return false;
     return true;
   };
+  const attics = new Map();
   for (const entry of PAYLOAD) {
     const src = path.join(CLI_ROOT, entry);
     const dst = path.join(target, entry);
     if (!fs.existsSync(src)) fail(`package is missing ${entry}/ — the npm tarball is incomplete`);
-    if (replace) fs.rmSync(dst, { recursive: true, force: true });
-    fs.mkdirSync(path.dirname(dst), { recursive: true });
-    fs.cpSync(src, dst, { recursive: true, force: true, filter: skip });
+    if (replace) {
+      if (fs.existsSync(dst)) attics.set(entry, setAsideTree(target, entry, skip));
+    } else {
+      fs.mkdirSync(path.dirname(dst), { recursive: true });
+      fs.cpSync(src, dst, { recursive: true, force: true, filter: skip });
+    }
   }
+  if (attics.size) carryOverInstanceState(target, attics);
+}
+
+// Instance-owned state inside the payload trees, distinguished from framework-owned
+// files (review P1, PR #53): installed package masters (kernel install), migration
+// state (ledger / pending / dormant teardown), and skill copies the incoming tree
+// does not ship (package connector skills, user standalone skills). Everything else
+// under .meta/ and .agents/ is framework-owned and replaced by the channel.
+const META_MERGE_DIRS = [path.join("plugins", "domains"), "migrations"];
+// .meta/command/ is mixed-ownership: framework commands ship in the fresh tree,
+// package commands (kernel install) and anything the channel no longer ships are
+// carried over by difference — the fresh copy wins for shared names.
+function carryOverCommands(target, metaAttic) {
+  const oldDir = path.join(metaAttic, "command");
+  if (!fs.existsSync(oldDir)) return;
+  const freshDir = path.join(target, ".meta", "command");
+  const fresh = new Set(fs.existsSync(freshDir) ? fs.readdirSync(freshDir) : []);
+  for (const d of fs.readdirSync(oldDir)) {
+    if (fresh.has(d)) continue;
+    fs.cpSync(path.join(oldDir, d), path.join(freshDir, d), { recursive: true, force: true });
+  }
+}
+
+function setAsideTree(target, entry, skip) {
+  const dst = path.join(target, entry);
+  const attic = path.join(target, ".owfa", "replace", entry === ".meta" ? "meta" : "agents");
+  fs.rmSync(attic, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(attic), { recursive: true });
+  fs.renameSync(dst, attic); // same volume — atomic enough for a directory swap
+  fs.cpSync(path.join(CLI_ROOT, entry), dst, { recursive: true, force: true, filter: skip });
+  return attic;
+}
+
+function mergeTree(src, dst) {
+  if (!fs.existsSync(src)) return;
+  fs.cpSync(src, dst, { recursive: true, force: false, errorOnExist: false });
+}
+
+function carryOverInstanceState(target, attics) {
+  const metaAttic = attics.get(".meta");
+  if (metaAttic) {
+    for (const d of META_MERGE_DIRS) mergeTree(path.join(metaAttic, d), path.join(target, ".meta", d));
+    carryOverCommands(target, metaAttic);
+    for (const p of PRESERVED) {
+      const s = path.join(metaAttic, p);
+      if (fs.existsSync(s)) {
+        const d = path.join(target, p);
+        fs.mkdirSync(path.dirname(d), { recursive: true });
+        fs.copyFileSync(s, d);
+      }
+    }
+  }
+  const agentsAttic = attics.get(".agents");
+  if (agentsAttic) {
+    const oldSkills = path.join(agentsAttic, "skills");
+    if (fs.existsSync(oldSkills)) {
+      const freshDir = path.join(target, ".agents", "skills");
+      const fresh = new Set(fs.existsSync(freshDir) ? fs.readdirSync(freshDir) : []);
+      for (const d of fs.readdirSync(oldSkills)) {
+        if (fresh.has(d)) continue; // framework-shipped skill — the fresh copy wins
+        fs.cpSync(path.join(oldSkills, d), path.join(freshDir, d), { recursive: true, force: true });
+      }
+    }
+  }
+  fs.rmSync(path.join(target, ".owfa", "replace"), { recursive: true, force: true });
 }
 
 function ensureDirs(target) {
@@ -360,23 +428,32 @@ function cmdDoctor(args) {
   out(`target ${target}`);
   if (!local) fail("not an OWFA instance (no .meta/VERSION) — run `owfa init` first");
   out(`instance framework ${local}`);
+  const problems = []; // required conditions — any hit fails doctor (review P2, PR #53)
   const agents = path.join(target, "AGENTS.md");
   if (!fs.existsSync(agents)) {
     out("AGENTS.md: MISSING — the agent will not see the structural contract");
+    problems.push("AGENTS.md is missing");
   } else {
     const text = fs.readFileSync(agents, "utf8");
     const ok = text.includes(INJECT_START) && text.includes(INJECT_END);
     out(`AGENTS.md: ${ok ? "injection markers present" : "MISSING injection markers"}`);
+    if (!ok) problems.push("AGENTS.md injection markers are missing or broken");
   }
   if (!py) {
     out("kernel validate: skipped (no python)");
-    return 1;
+    problems.push("Python 3.9+ not found — kernel validate not run");
+  } else {
+    out("");
+    if (kernel(target, ["validate"]) !== 0) problems.push("kernel validate failed (see above)");
   }
   out("");
-  const code = kernel(target, ["validate"]);
-  out("");
-  out(code === 0 ? "doctor: ok" : "doctor: kernel validate failed (see above)");
-  return code;
+  if (problems.length) {
+    for (const p of problems) out(`problem: ${p}`);
+    out("doctor: failed — fix the problems above");
+    return 1;
+  }
+  out("doctor: ok");
+  return 0;
 }
 
 
