@@ -52,7 +52,7 @@ Already have a workspace? `init` refuses if `.meta/` exists; use `npx owfa upgra
 
 ## 3. Manual five steps (git or offline)
 
-1. **Get the framework**: `git clone https://github.com/owfadev/vault-wiki.git my-workspace` — a clone is a valid instance. (Before the org rename, clone `https://github.com/AIE3905-Wuwa/vault-wiki.git`; the old URL redirects afterwards.) To embed into an existing vault, clone the template elsewhere and copy `.meta/` + `.agents/skills/` into the target root.
+1. **Get the framework**: `git clone https://github.com/owfadev/owfa.git my-workspace` — a clone is a valid instance. (Before the org rename, clone `https://github.com/AIE3905-Wuwa/vault-wiki.git`; the old URL redirects afterwards.) To embed into an existing vault, clone the template elsewhere and copy `.meta/` + `.agents/skills/` into the target root.
 2. **Write `AGENTS.md`**: one identity paragraph, one layout paragraph, and the injection markers verbatim from [agents-example.md](agents-example.md). Existing `AGENTS.md`? Paste in only the marker block.
 3. **Create four directories**: `vault/`, `wiki/notes/`, `wiki/sessions/`, `wiki/vault/`.
 4. **Converge**:
