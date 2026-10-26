@@ -17,11 +17,11 @@ This face was previously undeclared (an e-class vacuum live sample, #33's improv
 
 | Feedback | Destination | Test |
 |---|---|---|
-| kernel / mechanics / projections / core plugins / framework docs | vault-wiki | framework contract face |
+| kernel / mechanics / projections / core plugins / framework docs | owfa | framework contract face |
 | package member plugins (the bb family, the lark family, …) | the matching `pkg-*` repo | plugin id ∈ `PKG.members`; repo address in the registry INDEX |
 | behavior deviations (the #34 face) | wherever the plugin lives | behavior contracts live in PLUGIN.md |
-| new plugin proposals | vault-wiki (incubation; moves with the package when it lands) | no owning repo yet |
-| unclear | file on vault-wiki; maintainers transfer | fallback (#20 precedent) |
+| new plugin proposals | owfa (incubation; moves with the package when it lands) | no owning repo yet |
+| unclear | file on owfa; maintainers transfer | fallback (#20 precedent) |
 
 ## Triage gate — step 0, not passed means no analysis
 
