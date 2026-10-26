@@ -61,7 +61,7 @@ All channels deploy the same Core tree; pick by environment, not by feature.
 |---|---|---|
 | npm, target name | `npx owfa init my-workspace` | **name application pending** (npm froze `owfa` as too similar to `ow`/`ora`) |
 | npm, fallback name | `npx owfadev init my-workspace` | same CLI, bins `owfa` + `owfadev`; to be published if the name is not granted |
-| git, clone-as-instance | `git clone https://github.com/owfadev/vault-wiki.git my-workspace` | works today |
+| git, clone-as-instance | `git clone https://github.com/owfadev/owfa.git my-workspace` | works today |
 | git, embed into an existing vault | clone the template elsewhere, copy `.meta/` + `.agents/skills/` | works today |
 | template + instance (developers) | a template clone + a separate instance | see [CONTRIBUTING.md](../../CONTRIBUTING.md) |
 
@@ -105,7 +105,7 @@ If the directory already contains `.meta/`, `init` refuses; use `owfa upgrade` (
 **Clone-as-instance** (the clone *is* your workspace):
 
 ```bash
-git clone https://github.com/owfadev/vault-wiki.git my-workspace
+git clone https://github.com/owfadev/owfa.git my-workspace
 cd my-workspace
 # own the history if you do not want the framework's:
 rm -rf .git && git init
@@ -189,7 +189,7 @@ python3 .meta/scripts/wiki_plugin_kernel.py list-remote
 python3 .meta/scripts/wiki_plugin_kernel.py pkg
 ```
 
-The registry is the GitHub index at `AIE3905-Wuwa/registry` (moving to `owfadev/registry` with the org rename); before installing, it is also readable directly as `INDEX.yaml` in that repository. Each row shows the package version, the framework compat floor, the member plugins and the trust level.
+The registry is the GitHub index at `owfadev/registry` (`AIE3905-Wuwa/registry` until the org rename executes); before installing, it is also readable directly as `INDEX.yaml` in that repository. Each row shows the package version, the framework compat floor, the member plugins and the trust level.
 
 ### 7.2 Install a package
 
