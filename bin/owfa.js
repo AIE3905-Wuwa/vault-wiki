@@ -344,7 +344,9 @@ function cmdInit(args) {
       .filter(Boolean)) {
       out("");
       out(`installing package ${pkg} from the registry`);
-      if (kernel(target, ["install", pkg, "--yes"]) !== 0) fail(`package ${pkg} failed to install (earlier packages stay installed)`);
+      const installArgs = ["install", pkg, "--yes"];
+      if (args.without) installArgs.push("--without", String(args.without));
+      if (kernel(target, installArgs) !== 0) fail(`package ${pkg} failed to install (earlier packages stay installed)`);
       installed++;
       if (reportPending(target)) fail(`framework and ${pkg} are installed, but the workspace is not converged until the semantic migration above is cleared`);
     }

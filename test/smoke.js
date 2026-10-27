@@ -217,6 +217,19 @@ try {
     assert.strictEqual(fs.readFileSync(path.join(empty, ".meta", "kernel-journal.log"), "utf8"), "keep-me\n");
   });
 
+  step("init --packages forwards --without to the kernel install", () => {
+    const sub = path.join(tmpRoot, "subset");
+    const r = run(["init", sub, "--packages", "cuhksz", "--without", "sis"], tmpRoot);
+    // cuhksz stages a first-run semantic migration: init exits non-zero after a
+    // successful install — that is the designed tri-face, not a forwarding failure
+    assert.notStrictEqual(r.status, 0, "pending migration should surface");
+    assert.ok(/semantic migration/i.test(r.stdout + r.stderr), r.stdout + r.stderr);
+    const dom = path.join(sub, ".meta", "plugins", "domains", "cuhksz");
+    assert.ok(fs.existsSync(path.join(dom, "cuhksz", "PLUGIN.md")), "family root missing");
+    assert.ok(fs.existsSync(path.join(dom, "bb", "PLUGIN.md")), "kept member missing");
+    assert.ok(!fs.existsSync(path.join(dom, "sis", "PLUGIN.md")), "pruned member masters landed");
+  });
+
   step("upgrade --check is read-only", () => {
     fs.writeFileSync(path.join(empty, ".meta", "VERSION"), "0.2", "utf8");
     const r = run(["upgrade", empty, "--check"]);
