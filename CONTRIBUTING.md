@@ -7,6 +7,7 @@ Dev rules of the owfa framework. The framework repo is a library: no instance da
 - **Three members, all with write access** — develop and experiment
 - **Owner holds final say** — repo settings, member permissions and protection rules are owner-only; charter and kernel changes (`.meta/`, `AGENTS`-level contracts) are owner-reviewed
 - Everything moves through PRs: **any PR needs 1 approving review to merge** (`enforce_admins` is on — the owner pushes through PRs too; the protection switch itself is the owner's escape hatch for emergency fixes)
+- **PR aging policy (2026-10-27, owner ruling)**: a PR left unreviewed for more than 1 day will be force-processed by the administrator — reviewed-and-merged, rebased-and-merged, or closed with reasons on the record. Reviews are a courtesy deadline, not a parking lot; if you need more time, say so on the PR
 
 ## Commit flow
 
