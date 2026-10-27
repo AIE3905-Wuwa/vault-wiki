@@ -230,6 +230,25 @@ try {
     assert.ok(!fs.existsSync(path.join(dom, "sis", "PLUGIN.md")), "pruned member masters landed");
   });
 
+  // CLI UX: per-command help, unknown flags and commands must not execute (user feedback 2026-10-27)
+  step("init --help prints usage without creating anything", () => {
+    const dir = path.join(tmpRoot, "help-target");
+    const r = run(["init", dir, "--help"], tmpRoot);
+    assert.strictEqual(r.status, 0, r.stderr + r.stdout);
+    assert.ok(/usage: owfa init/.test(r.stdout), r.stdout);
+    assert.ok(!fs.existsSync(dir), "--help was executed as init");
+  });
+
+  step("unknown options and commands are rejected", () => {
+    const r = run(["init", path.join(tmpRoot, "nope"), "--bogus"], tmpRoot);
+    assert.strictEqual(r.status, 2, r.stdout + r.stderr);
+    assert.ok(/unknown option/.test(r.stdout), r.stdout);
+    assert.ok(!fs.existsSync(path.join(tmpRoot, "nope")), "unknown-flag init ran anyway");
+    const r2 = run(["frobnicate"], tmpRoot);
+    assert.strictEqual(r2.status, 2, r2.stdout);
+    assert.ok(/unknown command/.test(r2.stdout), r2.stdout);
+  });
+
   step("upgrade --check is read-only", () => {
     fs.writeFileSync(path.join(empty, ".meta", "VERSION"), "0.2", "utf8");
     const r = run(["upgrade", empty, "--check"]);

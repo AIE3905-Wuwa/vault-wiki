@@ -62,8 +62,10 @@ function rel(root, p) {
   return path.relative(root, p) || ".";
 }
 
+const FLAG_VALUE = ["name", "packages", "without", "from", "path"];
+
 function parseArgs(argv) {
-  const args = { _: [], flags: new Set() };
+  const args = { _: [], flags: new Set(), used: new Set() };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--") {
@@ -72,7 +74,8 @@ function parseArgs(argv) {
     }
     if (a.startsWith("--")) {
       const [key, inline] = a.slice(2).split("=", 2);
-      const takesValue = ["name", "packages", "without", "from"].includes(key);
+      const takesValue = FLAG_VALUE.includes(key);
+      args.used.add(key);
       if (takesValue && inline === undefined) {
         args[key] = argv[++i];
       } else if (takesValue) {
@@ -80,6 +83,8 @@ function parseArgs(argv) {
       } else {
         args.flags.add(key);
       }
+    } else if (a.startsWith("-") && a !== "-") {
+      args.used.add(a.slice(1)); // short or mistyped flag — validated by the command
     } else {
       args._.push(a);
     }
@@ -508,6 +513,35 @@ notes:
 `);
 }
 
+const COMMAND_HELP = {
+  init: "usage: owfa init [dir] [--name NAME] [--packages a,b] [--without m,n] [--force]\n\n" +
+        "deploy a fresh workspace (additive: existing files and AGENTS.md are preserved).\n" +
+        "python 3.9+ required for the framework; node 16.7+ runs this installer only.\n" +
+        "--packages installs registry packages; --without prunes members from them (dependency-closed subsets only).\n" +
+        "--force re-copies the framework trees over an existing instance (instance data is never touched).",
+  upgrade: "usage: owfa upgrade [dir] [--check] [--backup] [--force]\n\n" +
+        "replace the framework trees with this channel's version and converge.\n" +
+        "--check (alias --dry-run) is read-only; --backup snapshots the current trees to .owfa/backup/.\n" +
+        "instance data, installed packages, pending migrations and standalone skills are preserved.",
+  doctor: "usage: owfa doctor [dir]\n\n" +
+        "health check: python, framework version, AGENTS.md injection markers, kernel validate.\n" +
+        "exits non-zero when any required condition fails.",
+  add: "usage: owfa add <pkg> [--yes] [--without m,n]  (run inside the instance)\n\n" +
+       "install a domain package from the registry, then converge.\n" +
+       "--without prunes members (dependency-closed subsets only); unindexed repos need --yes.",
+  list: "usage: owfa list\n\nregistry catalog: versions, compat floors, installed marks.",
+  pkg: "usage: owfa pkg\n\ninstalled package inventory: members, connectors, core remainder.",
+};
+
+const COMMAND_FLAGS = {
+  init: ["force", "help", "h", ...FLAG_VALUE],
+  upgrade: ["check", "dry-run", "backup", "force", "help", "h"],
+  doctor: ["help", "h"],
+  add: ["yes", "without", "path", "from", "help", "h", ...[]],
+  list: ["help", "h"],
+  pkg: ["help", "h"],
+};
+
 function main() {
   const argv = process.argv.slice(2);
   const cmd = argv[0];
@@ -519,7 +553,25 @@ function main() {
     out(`owfa ${PKG.version} (framework ${FRAMEWORK_VERSION})`);
     return 0;
   }
+  if (!(cmd in COMMAND_HELP)) {
+    out(`unknown command: ${cmd}`);
+    out("");
+    usage();
+    return 2;
+  }
+  if (argv.slice(1).includes("--help") || argv.slice(1).includes("-h")) {
+    out(`owfa ${PKG.version}`);
+    out(COMMAND_HELP[cmd]);
+    return 0;
+  }
   const args = parseArgs(argv.slice(1));
+  const known = new Set(COMMAND_FLAGS[cmd]);
+  const bad = [...args.used].filter((k) => !known.has(k));
+  if (bad.length) {
+    out(`unknown option${bad.length > 1 ? "s" : ""} for ${cmd}: ${bad.map((b) => "--" + b.replace(/^-+/, "")).join(", ")}`);
+    out(`see: owfa ${cmd} --help`);
+    return 2;
+  }
   switch (cmd) {
     case "init":
       return cmdInit(args);
