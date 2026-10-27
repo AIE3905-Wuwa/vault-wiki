@@ -52,6 +52,7 @@ if (process.env.GITHUB_REF_TYPE === "tag" && tag !== `v${pkg.version}`) {
 const REQUIRED = [
   "package.json",
   "README.md",
+  "README.zh-CN.md",
   "LICENSE",
   ".meta/VERSION",
   ".meta/scripts/wiki_plugin_kernel.py",
@@ -61,7 +62,8 @@ const REQUIRED = [
   "bin/owfa.js",
   "templates/AGENTS.template.md",
 ];
-const ALLOWED_TOP = [".meta/", ".agents/", "bin/", "templates/", "package.json", "README.md", "LICENSE"];
+const ALLOWED_TOP = [".meta/", ".agents/", "bin/", "templates/", "package.json", "README.md",
+  "README.zh-CN.md", "LICENSE"];
 const FORBIDDEN = [/__pycache__/, /\.pyc$/, /(^|\/)test-repo\//, /^test\//, /^scripts\//, /^\.github\//, /pending\.json$/, /kernel-journal\.log$/, /registry-cache\.yaml$/, /^CONTRIBUTING\.md$/];
 
 // What ships is decided by package.json files + physical absence of generated
