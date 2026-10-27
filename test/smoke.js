@@ -127,6 +127,7 @@ try {
 
   step("upgrade preserves installed package, package command, pending migration and standalone skill", () => {
     fs.writeFileSync(path.join(empty, ".meta", "VERSION"), "0.2", "utf8"); // stale again
+    const blocksBefore = countPluginBlocks(fs.readFileSync(path.join(empty, "AGENTS.md"), "utf8"));
     const dom = path.join(empty, ".meta", "plugins", "domains", "demo");
     fs.mkdirSync(dom, { recursive: true });
     fs.writeFileSync(path.join(dom, "PLUGIN.yaml"), DEMO_PLUGIN, "utf8");
@@ -159,12 +160,31 @@ try {
     assert.ok(fs.existsSync(path.join(empty, ".agents", "skills", "demo-cmd", "SKILL.md")), "package command not re-deployed");
     const v = run(["doctor", empty], tmpRoot);
     assert.strictEqual(v.status, 0, "instance with carried package fails doctor: " + v.stdout);
+    // review round 2: the repro signal was the plugin count dropping 22 -> 21 —
+    // pin the carried package: the fresh region plus the demo block, never fewer
+    const blocksAfter = countPluginBlocks(fs.readFileSync(path.join(empty, "AGENTS.md"), "utf8"));
+    assert.strictEqual(blocksAfter, blocksBefore + 1, "carried package not injected (or a framework plugin dropped)");
+    assert.ok(fs.readFileSync(path.join(empty, "AGENTS.md"), "utf8").includes("<!-- plugin:demo"), "demo block missing");
     // scrub the fixture so later steps start from a clean instance
     fs.rmSync(path.join(empty, ".meta", "plugins", "domains", "demo"), { recursive: true, force: true });
     fs.rmSync(path.join(empty, ".meta", "command", "demo-cmd"), { recursive: true, force: true });
     fs.rmSync(path.join(empty, ".agents", "skills", "custom-user"), { recursive: true, force: true });
     fs.rmSync(path.join(empty, ".agents", "skills", "demo-cmd"), { recursive: true, force: true });
     fs.rmSync(path.join(empty, ".meta", "migrations", "demo"), { recursive: true, force: true });
+  });
+
+  // Review round 2 (PR #53): a parked attic from an interrupted replace holds the
+  // only copy of instance state — a rerun must refuse, never delete it.
+  step("interrupted replace protects the parked attic", () => {
+    fs.writeFileSync(path.join(empty, ".meta", "VERSION"), "0.2", "utf8");
+    const attic = path.join(empty, ".owfa", "replace", "meta");
+    fs.mkdirSync(attic, { recursive: true });
+    fs.writeFileSync(path.join(attic, "kernel-journal.log"), "only-copy\n", "utf8");
+    const r = run(["upgrade", empty, "--force"], tmpRoot);
+    assert.notStrictEqual(r.status, 0, "upgrade ran over a parked attic");
+    assert.ok(/interrupted replace/.test(r.stdout + r.stderr), r.stdout + r.stderr);
+    assert.strictEqual(fs.readFileSync(path.join(attic, "kernel-journal.log"), "utf8"), "only-copy\n", "parked attic was deleted");
+    fs.rmSync(path.join(empty, ".owfa"), { recursive: true, force: true }); // scrub fixture
   });
 
   // Review P2 (PR #53): doctor fails when a required condition is missing.

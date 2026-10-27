@@ -94,19 +94,17 @@ function copyPayload(target, { replace = false } = {}) {
     if (base === "smoke-tmp") return false;
     return true;
   };
-  const attics = new Map();
   for (const entry of PAYLOAD) {
     const src = path.join(CLI_ROOT, entry);
     const dst = path.join(target, entry);
     if (!fs.existsSync(src)) fail(`package is missing ${entry}/ — the npm tarball is incomplete`);
     if (replace) {
-      if (fs.existsSync(dst)) attics.set(entry, setAsideTree(target, entry, skip));
+      if (fs.existsSync(dst)) replacePayloadTree(target, entry, skip);
     } else {
       fs.mkdirSync(path.dirname(dst), { recursive: true });
       fs.cpSync(src, dst, { recursive: true, force: true, filter: skip });
     }
   }
-  if (attics.size) carryOverInstanceState(target, attics);
 }
 
 // Instance-owned state inside the payload trees, distinguished from framework-owned
@@ -115,6 +113,7 @@ function copyPayload(target, { replace = false } = {}) {
 // does not ship (package connector skills, user standalone skills). Everything else
 // under .meta/ and .agents/ is framework-owned and replaced by the channel.
 const META_MERGE_DIRS = [path.join("plugins", "domains"), "migrations"];
+
 // .meta/command/ is mixed-ownership: framework commands ship in the fresh tree,
 // package commands (kernel install) and anything the channel no longer ships are
 // carried over by difference — the fresh copy wins for shared names.
@@ -129,45 +128,64 @@ function carryOverCommands(target, metaAttic) {
   }
 }
 
-function setAsideTree(target, entry, skip) {
-  const dst = path.join(target, entry);
-  const attic = path.join(target, ".owfa", "replace", entry === ".meta" ? "meta" : "agents");
-  fs.rmSync(attic, { recursive: true, force: true });
-  fs.mkdirSync(path.dirname(attic), { recursive: true });
-  fs.renameSync(dst, attic); // same volume — atomic enough for a directory swap
-  fs.cpSync(path.join(CLI_ROOT, entry), dst, { recursive: true, force: true, filter: skip });
-  return attic;
-}
-
 function mergeTree(src, dst) {
   if (!fs.existsSync(src)) return;
   fs.cpSync(src, dst, { recursive: true, force: false, errorOnExist: false });
 }
 
-function carryOverInstanceState(target, attics) {
-  const metaAttic = attics.get(".meta");
-  if (metaAttic) {
-    for (const d of META_MERGE_DIRS) mergeTree(path.join(metaAttic, d), path.join(target, ".meta", d));
-    carryOverCommands(target, metaAttic);
+function carryOverEntry(target, entry, attic) {
+  if (entry === ".meta") {
+    for (const d of META_MERGE_DIRS) mergeTree(path.join(attic, d), path.join(target, ".meta", d));
+    carryOverCommands(target, attic);
     for (const p of PRESERVED) {
-      const s = path.join(metaAttic, p);
+      const s = path.join(attic, path.relative(".meta", p)); // PRESERVED is target-relative; attic IS the old .meta
       if (fs.existsSync(s)) {
         const d = path.join(target, p);
         fs.mkdirSync(path.dirname(d), { recursive: true });
         fs.copyFileSync(s, d);
       }
     }
+  } else {
+    const oldSkills = path.join(attic, "skills");
+    if (!fs.existsSync(oldSkills)) return;
+    const freshDir = path.join(target, ".agents", "skills");
+    const fresh = new Set(fs.existsSync(freshDir) ? fs.readdirSync(freshDir) : []);
+    for (const d of fs.readdirSync(oldSkills)) {
+      if (fresh.has(d)) continue; // framework-shipped skill — the fresh copy wins
+      fs.cpSync(path.join(oldSkills, d), path.join(freshDir, d), { recursive: true, force: true });
+    }
   }
-  const agentsAttic = attics.get(".agents");
-  if (agentsAttic) {
-    const oldSkills = path.join(agentsAttic, "skills");
-    if (fs.existsSync(oldSkills)) {
-      const freshDir = path.join(target, ".agents", "skills");
-      const fresh = new Set(fs.existsSync(freshDir) ? fs.readdirSync(freshDir) : []);
-      for (const d of fs.readdirSync(oldSkills)) {
-        if (fresh.has(d)) continue; // framework-shipped skill — the fresh copy wins
-        fs.cpSync(path.join(oldSkills, d), path.join(freshDir, d), { recursive: true, force: true });
-      }
+}
+
+// Review round 2 (PR #53): the parked tree under .owfa/replace/ holds the only
+// copy of the instance state between set-aside and carry-over. An interrupted
+// swap (Windows: rename of a tree with an open file) must therefore never be
+// implicitly cleaned by a retry, and a failure must roll the parked tree back.
+function replacePayloadTree(target, entry, skip) {
+  const dst = path.join(target, entry);
+  const attic = path.join(target, ".owfa", "replace", entry === ".meta" ? "meta" : "agents");
+  if (fs.existsSync(attic)) {
+    fail(
+      `interrupted replace detected: instance state is parked at ${attic} — ` +
+      `do NOT simply rerun. Restore it manually (delete the fresh ${entry}/, ` +
+      `rename the parked tree back to ${entry}/), then rerun.`
+    );
+  }
+  fs.mkdirSync(path.dirname(attic), { recursive: true });
+  try {
+    fs.renameSync(dst, attic); // same volume — atomic enough for a directory swap
+    fs.cpSync(path.join(CLI_ROOT, entry), dst, { recursive: true, force: true, filter: skip });
+    carryOverEntry(target, entry, attic);
+  } catch (e) {
+    try {
+      fs.rmSync(dst, { recursive: true, force: true }); // partial fresh copy
+      fs.renameSync(attic, dst); // parked tree back in place
+      fail(`replace failed (${e.message}) — rolled back: ${entry}/ restored from the parked tree; fix the underlying error before rerunning`);
+    } catch (e2) {
+      fail(
+        `replace failed (${e.message}) AND rollback failed (${e2.message}) — the previous tree ` +
+        `is parked at ${attic}; do NOT rerun until it is restored to ${entry}/`
+      );
     }
   }
   fs.rmSync(path.join(target, ".owfa", "replace"), { recursive: true, force: true });
@@ -264,22 +282,6 @@ function timestamp() {
 }
 
 
-function stashInstanceState(target) {
-  const stash = new Map();
-  for (const p of PRESERVED) {
-    const src = path.join(target, p);
-    if (fs.existsSync(src)) stash.set(p, fs.readFileSync(src));
-  }
-  return stash;
-}
-
-function restoreInstanceState(target, stash) {
-  for (const [p, buf] of stash) {
-    fs.mkdirSync(path.dirname(path.join(target, p)), { recursive: true });
-    fs.writeFileSync(path.join(target, p), buf);
-  }
-}
-
 function pendingPackages(target) {
   try {
     return Object.keys(JSON.parse(fs.readFileSync(path.join(target, ".meta", "migrations", "pending.json"), "utf8")));
@@ -320,9 +322,7 @@ function cmdInit(args) {
     out("note: .agents/skills/ exists — framework skill copies are updated in place, other skills stay untouched");
   }
   if (hasMeta) out("warning: --force replaces the framework trees; instance vault/ and wiki/ are untouched");
-  const stash = hasMeta ? stashInstanceState(target) : new Map();
   copyPayload(target, { replace: hasMeta });
-  if (hasMeta) restoreInstanceState(target, stash);
   ensureDirs(target);
   out(`agents.md: ${ensureAgents(target, name)}`);
 
@@ -393,10 +393,8 @@ function cmdUpgrade(args) {
     out(`backup: ${rel(target, dir)} (add .owfa/ to the instance .gitignore if you do not want it tracked)`);
   }
 
-  const stash = stashInstanceState(target);
   out(`warning: local edits under ${PAYLOAD.join("/, ")}/ are replaced by the channel's tree — keep instance hotfixes in git`);
   copyPayload(target, { replace: true });
-  restoreInstanceState(target, stash);
 
   out("");
   out("converging projections (python .meta/scripts/wiki_plugin_kernel.py all)");

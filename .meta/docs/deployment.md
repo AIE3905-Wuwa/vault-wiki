@@ -67,7 +67,7 @@ All channels deploy the same Core tree; pick by environment, not by feature.
 
 > Until the npm name is served by the registry, the git channel is the working path. Do not treat `npx owfa` as live before `npm view owfa version` returns a version.
 >
-> Until the org rename is executed, the clone URL is `https://github.com/AIE3905-Wuwa/vault-wiki.git`; after the move to `owfadev`, GitHub redirects the old repository URLs. The `owfadev` paths in this guide are the post-rename target.
+> The org rename executed 2026-10-26 (`AIE3905-Wuwa` → `owfadev`, `vault-wiki` → `owfa`); old repository URLs redirect, old org/API paths 404.
 
 ## 4. Install
 
@@ -189,7 +189,7 @@ python3 .meta/scripts/wiki_plugin_kernel.py list-remote
 python3 .meta/scripts/wiki_plugin_kernel.py pkg
 ```
 
-The registry is the GitHub index at `owfadev/registry` (`AIE3905-Wuwa/registry` until the org rename executes); before installing, it is also readable directly as `INDEX.yaml` in that repository. Each row shows the package version, the framework compat floor, the member plugins and the trust level.
+The registry is the GitHub index at `owfadev/registry`; before installing, it is also readable directly as `INDEX.yaml` in that repository. Each row shows the package version, the framework compat floor, the member plugins and the trust level.
 
 ### 7.2 Install a package
 
