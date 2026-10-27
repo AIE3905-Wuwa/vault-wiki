@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""vault-wiki plugin lifecycle mechanical kernel ((un)install / compliance / dependencies / injection / registry / copy sync).
+"""owfa plugin lifecycle mechanical kernel ((un)install / compliance / dependencies / injection / registry / copy sync).
 
 Positioning (see .meta/protocol/actions.md execution principles): deterministic structural
 operations go to this script; semantic judgment goes to the LLM. The script touches only
@@ -1322,7 +1322,7 @@ def _upgrade_action(pkg, args):
     if fw is not None:
         m = re.fullmatch(r">=\s*(\d+)\.(\d+)", str(new_pkgm.get("compat") or ""))
         if m and (int(m.group(1)), int(m.group(2))) > fw:
-            print(f"[error] upgrade needs framework {'.'.join(map(str, (int(m.group(1)), int(m.group(2)))))} first (kernel upgrade framework — pending)")
+            print(f"[error] upgrade needs framework {'.'.join(map(str, (int(m.group(1)), int(m.group(2)))))} first — run `npx owfa upgrade` (npm channel), or sync the template trees and rerun kernel all")
             return 1
     # quiet mechanical reinstall (uninstall -> install-from-src with prev_version)
     buf = io.StringIO()
@@ -1372,7 +1372,7 @@ def do_upgrade(pkg, args=None):
         if m:
             rt = (int(m.group(1)), int(m.group(2)))
             if fw and rt > fw:
-                fw_note = f" — remote v{rfw} available (manual sync: template diff → selective copy → kernel all, see CONTRIBUTING)"
+                fw_note = f" — remote v{rfw} available (run `npx owfa upgrade`, or manual sync: template diff → selective copy → kernel all, see CONTRIBUTING)"
             elif fw:
                 fw_note = " — up to date with the template"
     except Exception:

@@ -7,7 +7,10 @@
 | User reports dissatisfaction with agent behavior; behavior self-audit | [agent-behavior.md](agent-behavior.md) — feedback handling (consent gate) → routing → the seven-step standard |
 | Filing feedback — which repo owns it | [agent-behavior.md](agent-behavior.md) §Routing |
 | How packages / install / upgrade / migrations work (design + decision ledger) | [packages.md](packages.md) |
-| Deploying an instance; the two postures; first steps | [quickstart.md](quickstart.md) |
+| Deploying an instance; components (CLI/Core/kernel); channels; packages; upgrades; troubleshooting | [deployment.md](deployment.md) |
+| Five-minute install path | [quickstart.md](quickstart.md) |
+| Installing/upgrading the framework body; npm channel; release runbook | [distribution.md](distribution.md) |
+| The name: OWFA expansion, two names two jobs, collision policy | [naming.md](naming.md) |
 | Converting a legacy (pre-split flat) instance to the package era | [conversion.md](conversion.md) — the eight-step drill walked on a real instance |
 | Instance git usage (snapshots, red lines, recovery) | the [instance-git plugin](../plugins/core/instance-git/PLUGIN.md) (core 21) |
 | Framework mechanics: projections, bridges, injection, inject tiers | [mechanics.md](mechanics.md) |

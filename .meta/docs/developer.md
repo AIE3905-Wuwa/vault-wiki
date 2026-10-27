@@ -28,6 +28,6 @@ A single plugin never ships bare — the package is the distribution unit. A lon
 
 ## Discovery: how people (and agents) find your work
 
-- **Before registration**: your repo is already installable (`kernel install <owner>/<repo> --yes`, trust: unknown) and findable via GitHub topics — tag the repo `vault-wiki-package`
+- **Before registration**: your repo is already installable (`kernel install <owner>/<repo> --yes`, trust: unknown) and findable via GitHub topics — tag the repo `owfa-package`
 - **After the registry PR**: listed in `kernel list-remote` (the agent surface), installable without `--yes`, trust: reviewed-3rd-party
 - **Write the summary for agents** — the registry `summary` line and your SKILL.md `description` fields are what agents actually match against; a vague summary is undiscoverable

@@ -1,7 +1,7 @@
 ---
 verb: init
 ---
-Framework first-run (deployment, quickstart distilled for the agent; activates as a staged migration once upgrade-framework lands):
+Framework first-run (deployment, the deployment guide distilled for the agent). The npm channel performs this mechanically — `npx owfa init <dir>` — and this page stays the manual recipe it implements (and the reference for the git channel).
 
 1. Copy `.meta/` and `.agents/skills/` into the target vault root (minimal core variant: `plugins/core/` + protocol + scripts + docs + VERSION + command).
 2. Write the target AGENTS.md shell (identity + layout paragraphs; the handwritten region is the user's) with the injection markers verbatim — see `.meta/docs/agents-example.md`.

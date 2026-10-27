@@ -1,0 +1,46 @@
+{
+  "name": "owfa",
+  "version": "0.3.0",
+  "description": "OWFA — One Workspace For All (agents). Install, initialize and upgrade the owfa agent workspace framework.",
+  "keywords": [
+    "owfa",
+    "owfa-agent-workspace",
+    "agent",
+    "ai",
+    "knowledge-base",
+    "wiki",
+    "markdown",
+    "obsidian",
+    "scaffold"
+  ],
+  "homepage": "https://github.com/owfadev/owfa#readme",
+  "bugs": {
+    "url": "https://github.com/owfadev/owfa/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owfadev/owfa.git"
+  },
+  "license": "MIT",
+  "author": "owfadev",
+  "bin": {
+    "owfa": "bin/owfa.js"
+  },
+  "files": [
+    ".meta",
+    ".agents",
+    "bin",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=16.7"
+  },
+  "scripts": {
+    "test": "node test/smoke.js",
+    "prepack": "node scripts/clean-local-state.js",
+    "prepublishOnly": "node scripts/verify-release.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
