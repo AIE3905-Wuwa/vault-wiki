@@ -1,5 +1,5 @@
 {
-  "name": "owfa",
+  "name": "owfadev",
   "version": "0.3.0",
   "description": "OWFA — One Workspace For All (agents). Install, initialize and upgrade the owfa agent workspace framework.",
   "keywords": [
@@ -24,7 +24,8 @@
   "license": "MIT",
   "author": "owfadev",
   "bin": {
-    "owfa": "bin/owfa.js"
+    "owfa": "bin/owfa.js",
+    "owfadev": "bin/owfa.js"
   },
   "files": [
     ".meta",
